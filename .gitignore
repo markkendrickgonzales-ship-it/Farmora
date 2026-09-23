@@ -33,6 +33,19 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Web build artifacts
+/assets/
+/canvaskit/
+/docs/
+/flutter.js
+/flutter_bootstrap.js
+/flutter_service_worker.js
+/main.dart.js
+/version.json
+/index.html
+/manifest.json
+/favicon.png
+
 # Symbolication related
 app.*.symbols
 
