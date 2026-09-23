@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'theme/app_theme.dart';
 import 'widgets/bottom_nav.dart';
 import 'services/supabase_client.dart';
+import 'utils/app_route.dart';
 
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
@@ -157,14 +158,46 @@ class _MainShellState extends State<MainShell> {
   Widget build(BuildContext context) {
     final showNav = _navScreens.contains(_screen);
 
-    return Scaffold(
-      backgroundColor: FarmoraColors.bg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(child: _buildScreen()),
-            if (showNav) BottomNav(screen: _screen, go: _go),
-          ],
+    return PopScope(
+      // On the login screen let the system back button exit the app.
+      canPop: _screen == 'login',
+      onPopInvokedWithResult: (didPop, _) {
+        // For sub-screens, route back to their logical parent instead of
+        // closing the app.
+        if (didPop) return;
+        const childParents = {
+          'resourceMonitoring': 'monitoringHub',
+          'envMonitoring': 'monitoringHub',
+          'historyLog': 'monitoringHub',
+          'farmLogInput': 'farmLogs',
+          'reportUpload': 'reportCreate',
+          'camera': 'farmLogs',
+          'notifications': 'home',
+          'feedback': 'profile',
+        };
+        _go(childParents[_screen] ?? 'home');
+      },
+      child: Scaffold(
+        backgroundColor: FarmoraColors.bg,
+        body: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  switchInCurve: Curves.easeInOut,
+                  switchOutCurve: Curves.easeInOut,
+                  transitionBuilder: shellScreenTransition,
+                  child: KeyedSubtree(
+                    // A new key per screen triggers the slide + fade.
+                    key: ValueKey(_screen),
+                    child: _buildScreen(),
+                  ),
+                ),
+              ),
+              if (showNav) BottomNav(screen: _screen, go: _go),
+            ],
+          ),
         ),
       ),
     );

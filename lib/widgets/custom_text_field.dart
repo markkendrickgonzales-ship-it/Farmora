@@ -5,6 +5,7 @@ class CustomTextField extends StatelessWidget {
   final String placeholder;
   final IconData? icon;
   final String? value;
+  final TextEditingController? controller;
   final ValueChanged<String>? onChanged;
   final bool isPassword;
   final bool obscureText;
@@ -16,6 +17,7 @@ class CustomTextField extends StatelessWidget {
     required this.placeholder,
     this.icon,
     this.value,
+    this.controller,
     this.onChanged,
     this.isPassword = false,
     this.obscureText = false,
@@ -40,7 +42,8 @@ class CustomTextField extends StatelessWidget {
           ],
           Expanded(
             child: TextFormField(
-              initialValue: value,
+              controller: controller,
+              initialValue: controller == null ? value : null,
               onChanged: onChanged,
               obscureText: isPassword && obscureText,
               keyboardType: keyboardType,

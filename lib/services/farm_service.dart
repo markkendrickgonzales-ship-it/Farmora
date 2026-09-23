@@ -1,4 +1,61 @@
-﻿import 'supabase_client.dart';
+﻿import 'package:supabase_flutter/supabase_flutter.dart';
+import 'supabase_client.dart';
+
+/// Immutable snapshot of the signed-in user's profile, combining Supabase
+/// Auth data (email / id) with the optional public `profiles` table.
+class UserProfile {
+  final String userId;
+  final String email;
+  final String fullName;
+  final String role;
+  final String phone;
+  final String location;
+  final bool emailConfirmed;
+
+  const UserProfile({
+    required this.userId,
+    required this.email,
+    required this.fullName,
+    required this.role,
+    required this.phone,
+    required this.location,
+    this.emailConfirmed = false,
+  });
+
+  /// What to show as the user's name: the stored full name, otherwise the
+  /// email local-part, otherwise a generic label.
+  String get displayName {
+    if (fullName.trim().isNotEmpty) return fullName.trim();
+    if (email.isNotEmpty) return email.split('@').first;
+    return 'Farmora user';
+  }
+
+  /// Two-letter avatar initials derived from [displayName].
+  String get initials {
+    final parts =
+        displayName.replaceAll(RegExp(r'[^A-Za-z ]'), '').trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty || parts.first.isEmpty) return '?';
+    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+    return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+  }
+
+  UserProfile copyWith({
+    String? fullName,
+    String? role,
+    String? phone,
+    String? location,
+  }) {
+    return UserProfile(
+      userId: userId,
+      email: email,
+      fullName: (fullName != null && fullName.isNotEmpty) ? fullName : this.fullName,
+      role: (role != null && role.isNotEmpty) ? role : this.role,
+      phone: (phone != null && phone.isNotEmpty) ? phone : this.phone,
+      location: (location != null && location.isNotEmpty) ? location : this.location,
+      emailConfirmed: emailConfirmed,
+    );
+  }
+}
 
 class FarmService {
   // ── Helpers ─────────────────────────────────────────────────────────────
@@ -246,6 +303,92 @@ class FarmService {
         .order('created_at', ascending: false)
         .limit(limit);
     return List<Map<String, dynamic>>.from(data as List);
+  }
+
+  // ─── User profiles ───────────────────────────────────────────────────────
+
+  /// The currently signed-in user (null when logged out).
+  static User? get currentUser => supabase.auth.currentUser;
+
+  /// Loads the caller's profile.
+  ///
+  /// Name/email come from Supabase Auth ([currentUser]); the optional
+  /// public `profiles` table supplies role, phone and location. If the
+  /// table doesn't exist yet the auth values alone are returned.
+  static Future<UserProfile> fetchMyProfile() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      throw Exception('Not signed in');
+    }
+
+    final meta = user.userMetadata ?? {};
+    final profile = UserProfile(
+      userId: user.id,
+      email: user.email ?? '',
+      fullName: (meta['full_name'] as String?) ?? '',
+      role: (meta['role'] as String?) ?? 'Farm manager',
+      phone: (meta['phone'] as String?) ?? '',
+      location: (meta['location'] as String?) ?? '',
+      emailConfirmed: user.emailConfirmedAt != null,
+    );
+
+    try {
+      final rows = await supabase.from('profiles').select().eq('id', user.id);
+      final list = List<Map<String, dynamic>>.from(rows as List);
+      if (list.isNotEmpty) {
+        final row = list.first;
+        return profile.copyWith(
+          fullName: row['full_name'] as String?,
+          role: row['role'] as String?,
+          phone: row['phone'] as String?,
+          location: row['location'] as String?,
+        );
+      }
+    } catch (error) {
+      // profiles table missing / not yet readable – auth data is enough.
+      print('DEBUG: fetchMyProfile profiles lookup skipped = $error');
+    }
+    return profile;
+  }
+
+  /// Saves edited profile fields: upserts into the `profiles` table and
+  /// mirrors them into the auth user metadata so the data survives even if
+  /// the table isn't configured.
+  static Future<void> updateMyProfile({
+    required String fullName,
+    required String role,
+    required String phone,
+    required String location,
+  }) async {
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      throw Exception('Not signed in');
+    }
+
+    try {
+      await supabase.from('profiles').upsert({
+        'id': user.id,
+        'email': user.email,
+        'full_name': fullName,
+        'role': role,
+        'phone': phone,
+        'location': location,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+    } catch (error) {
+      print('DEBUG: updateMyProfile upsert failed = $error');
+    }
+
+    await supabase.auth.updateUser(
+      UserAttributes(
+        data: {
+          'full_name': fullName,
+          'role': role,
+          'phone': phone,
+          'location': location,
+        },
+      ),
+    );
   }
 
   // ─── Helpers ─────────────────────────────────────────────────────────────

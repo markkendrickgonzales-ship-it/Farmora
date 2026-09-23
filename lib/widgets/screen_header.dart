@@ -17,6 +17,7 @@ class ScreenHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final showBack = onBack != null || Navigator.of(context).canPop();
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
       decoration: const BoxDecoration(
@@ -30,19 +31,33 @@ class ScreenHeader extends StatelessWidget {
           Expanded(
             child: Row(
               children: [
-                if (onBack != null) ...[
-                  InkWell(
-                    onTap: onBack,
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      width: 32,
-                      height: 32,
+                if (showBack) ...[
+                  IconButton(
+                    onPressed: () {
+                      if (onBack != null) {
+                        onBack!();
+                      } else if (Navigator.of(context).canPop()) {
+                        Navigator.pop(context);
+                      }
+                    },
+                    tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                    visualDensity: VisualDensity.compact,
+                    constraints: const BoxConstraints(),
+                    padding: EdgeInsets.zero,
+                    icon: Container(
+                      width: 34,
+                      height: 34,
                       decoration: BoxDecoration(
                         color: FarmoraColors.surfaceSunken,
                         borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: FarmoraColors.line),
                       ),
                       alignment: Alignment.center,
-                      child: const Icon(Icons.chevron_left, size: 20, color: FarmoraColors.ink),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new,
+                        size: 16,
+                        color: FarmoraColors.ink,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),

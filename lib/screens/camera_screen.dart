@@ -129,7 +129,10 @@ class _CameraScreenState extends State<CameraScreen> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const ScreenHeader(title: 'Camera'),
+        ScreenHeader(
+          title: 'Camera',
+          onBack: () => widget.go('farmLogs'),
+        ),
         Expanded(
           child: _cameraError != null
               ? _buildErrorView()
