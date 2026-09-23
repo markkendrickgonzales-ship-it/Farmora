@@ -7,8 +7,15 @@ import '../services/farm_service.dart';
 
 class ReportCreateScreen extends StatefulWidget {
   final ValueChanged<String> go;
+  final bool needsRefresh;
+  final VoidCallback? onRefreshComplete;
 
-  const ReportCreateScreen({super.key, required this.go});
+  const ReportCreateScreen({
+    super.key,
+    required this.go,
+    this.needsRefresh = false,
+    this.onRefreshComplete,
+  });
 
   @override
   State<ReportCreateScreen> createState() => _ReportCreateScreenState();
@@ -36,6 +43,15 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  @override
+  void didUpdateWidget(ReportCreateScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.needsRefresh && !oldWidget.needsRefresh) {
+      _loadData();
+      widget.onRefreshComplete?.call();
+    }
   }
 
   Future<void> _loadData() async {

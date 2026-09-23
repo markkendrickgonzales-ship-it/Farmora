@@ -122,6 +122,60 @@ class FarmService {
 
   // ─── Feeding logs ────────────────────────────────────────────────────────
 
+  /// Insert a new feeding log entry
+  static Future<void> insertFeedingLog({
+    required String farmId,
+    required String actionType,
+    required double amount,
+    required String unit,
+    String triggerSource = 'manual',
+    String? notes,
+    String? imagePath,
+  }) async {
+    try {
+      // Validate farm_id is UUID
+      if (!_isValidUUID(farmId)) {
+        throw Exception('Invalid farm ID format. Must be a UUID.');
+      }
+
+      // Validate amount
+      if (amount <= 0) {
+        throw Exception('Amount must be greater than 0');
+      }
+
+      // Validate unit
+      if (!['kg', 'L', 'liters'].contains(unit.toLowerCase())) {
+        throw Exception('Invalid unit. Must be kg or L');
+      }
+
+      // Validate action type
+      if (!['feeding', 'watering'].contains(actionType.toLowerCase())) {
+        throw Exception('Invalid action type. Must be Feeding or Watering');
+      }
+
+      // Include image path in notes for now (will be properly stored when file storage is implemented)
+      String enhancedNotes = notes ?? '';
+      if (imagePath != null && imagePath.isNotEmpty) {
+        enhancedNotes = enhancedNotes.isEmpty
+            ? 'Image attached: ${imagePath.split('/').last}'
+            : '$enhancedNotes\n\nImage attached: ${imagePath.split('/').last}';
+      }
+
+      await supabase.from('feeding_logs').insert({
+        'farm_id': farmId,
+        'action_type': actionType,
+        'amount': amount,
+        'unit': unit,
+        'trigger_source': triggerSource,
+        'notes': enhancedNotes.isNotEmpty ? enhancedNotes : null,
+        'action_time': DateTime.now().toIso8601String(),
+      });
+    } catch (error) {
+      print('DEBUG: insertFeedingLog error = $error');
+      rethrow;
+    }
+  }
+
   /// Returns recent feeding-log rows for [farmId], newest first.
   static Future<List<Map<String, dynamic>>> fetchFeedingLogs(
       String farmId, {int limit = 50}) async {
@@ -130,12 +184,66 @@ class FarmService {
       print('DEBUG: fetchFeedingLogs skipped - farmId is not a valid UUID: $farmId');
       return [];
     }
-    
+
     final data = await supabase
         .from('feeding_logs')
         .select()
         .eq('farm_id', farmId)
         .order('action_time', ascending: false)
+        .limit(limit);
+    return List<Map<String, dynamic>>.from(data as List);
+  }
+
+  // ─── Reports ────────────────────────────────────────────────────────────
+
+  /// Insert a new report into the database
+  static Future<void> insertReport({
+    required String farmId,
+    required String title,
+    required String category,
+    required String notes,
+    String? filePath,
+  }) async {
+    try {
+      // Validate farm_id is UUID if needed
+      if (!_isValidUUID(farmId)) {
+        throw Exception('Invalid farm ID format');
+      }
+
+      // Prepare the insert payload with standard columns that should exist in the schema
+      final payload = <String, dynamic>{
+        'farm_id': farmId,
+        'title': title,
+        'category': category,
+        'notes': notes.isNotEmpty ? notes : null,
+        'created_at': DateTime.now().toIso8601String(),
+      };
+
+      // Note: file_path/file_url column handling depends on actual database schema
+      // For now, we insert without file attachment to avoid schema errors
+      // TODO: Add proper file storage integration once schema is confirmed
+
+      await supabase.from('reports').insert(payload);
+    } catch (error) {
+      print('DEBUG: insertReport error = $error');
+      rethrow;
+    }
+  }
+
+  /// Fetch recent reports for a farm
+  static Future<List<Map<String, dynamic>>> fetchReports(
+      String farmId, {int limit = 50}) async {
+    // Skip query if farmId is not a valid UUID
+    if (!_isValidUUID(farmId)) {
+      print('DEBUG: fetchReports skipped - farmId is not a valid UUID: $farmId');
+      return [];
+    }
+
+    final data = await supabase
+        .from('reports')
+        .select()
+        .eq('farm_id', farmId)
+        .order('created_at', ascending: false)
         .limit(limit);
     return List<Map<String, dynamic>>.from(data as List);
   }

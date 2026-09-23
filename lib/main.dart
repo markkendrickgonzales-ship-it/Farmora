@@ -48,6 +48,8 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   String _screen = 'login';
   bool _initialized = false;
+  bool _needsRefreshFarmLogs = false;
+  bool _needsRefreshReports = false;
 
   final List<String> _navScreens = const [
     'home',
@@ -88,6 +90,18 @@ class _MainShellState extends State<MainShell> {
     setState(() => _screen = id);
   }
 
+  void _triggerFarmLogsRefresh() {
+    setState(() {
+      _needsRefreshFarmLogs = true;
+    });
+  }
+
+  void _triggerReportsRefresh() {
+    setState(() {
+      _needsRefreshReports = true;
+    });
+  }
+
   Future<void> _signOut() async {
     await supabase.auth.signOut();
   }
@@ -111,13 +125,21 @@ class _MainShellState extends State<MainShell> {
       case 'historyLog':
         return HistoryLogScreen(go: _go);
       case 'reportCreate':
-        return ReportCreateScreen(go: _go);
+        return ReportCreateScreen(
+          go: _go,
+          needsRefresh: _needsRefreshReports,
+          onRefreshComplete: () => setState(() => _needsRefreshReports = false),
+        );
       case 'farmLogs':
-        return FarmLogsScreen(go: _go);
+        return FarmLogsScreen(
+          go: _go,
+          needsRefresh: _needsRefreshFarmLogs,
+          onRefreshComplete: () => setState(() => _needsRefreshFarmLogs = false),
+        );
       case 'farmLogInput':
-        return FarmLogInputScreen(go: _go);
+        return FarmLogInputScreen(go: _go, onSubmitted: _triggerFarmLogsRefresh);
       case 'reportUpload':
-        return ReportUploadScreen(go: _go);
+        return ReportUploadScreen(go: _go, onSubmitted: _triggerReportsRefresh);
       case 'camera':
         return CameraScreen(go: _go);
       case 'notifications':

@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
 import '../widgets/farmora_card.dart';
 import '../widgets/screen_header.dart';
 import '../widgets/primary_button.dart';
+import '../services/farm_service.dart';
+import '../services/supabase_client.dart';
 
 class ReportUploadScreen extends StatefulWidget {
   final ValueChanged<String> go;
+  final VoidCallback? onSubmitted;
 
-  const ReportUploadScreen({super.key, required this.go});
+  const ReportUploadScreen({super.key, required this.go, this.onSubmitted});
 
   @override
   State<ReportUploadScreen> createState() => _ReportUploadScreenState();
@@ -19,7 +23,9 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
   String _notes = '';
   bool _submitted = false;
   bool _uploading = false;
-  String? _selectedFileName;
+  String? _farmId;
+  String _farmName = 'Farm';
+  String? _imagePath;
 
   final List<String> _categories = const [
     'General inspection',
@@ -28,17 +34,89 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
     'Resource usage',
     'Safety incident',
   ];
+  final ImagePicker _imagePicker = ImagePicker();
 
-  void _selectFile() {
-    // In a real implementation, this would open a file picker
-    // For now, we'll simulate file selection
+  @override
+  void initState() {
+    super.initState();
+    _loadFarmInfo();
+  }
+
+  Future<void> _loadFarmInfo() async {
+    try {
+      // Use telemetry farms to get UUID farm_ids for reports
+      final telemetryFarms = await FarmService.fetchTelemetryFarms();
+      if (telemetryFarms.isNotEmpty) {
+        setState(() {
+          _farmId = telemetryFarms.first['farm_id'] as String?;
+          _farmName = 'Telemetry Farm'; // No farm name in telemetry data
+        });
+      } else {
+        print('ERROR [ReportUpload]: No telemetry farms found');
+      }
+    } catch (e) {
+      print('ERROR [ReportUpload]: Failed to load farm info: $e');
+    }
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 80,
+      );
+      if (image != null) {
+        setState(() {
+          _imagePath = image.path;
+        });
+      }
+    } catch (e) {
+      print('ERROR [ReportUpload]: Failed to pick image from camera: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to capture image')),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickImageFromGallery() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
+      if (image != null) {
+        setState(() {
+          _imagePath = image.path;
+        });
+      }
+    } catch (e) {
+      print('ERROR [ReportUpload]: Failed to pick image from gallery: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to select image')),
+        );
+      }
+    }
+  }
+
+  void _removeImage() {
     setState(() {
-      _selectedFileName = 'report_document.pdf';
+      _imagePath = null;
     });
   }
 
+  void _selectFile() {
+    // File upload functionality temporarily disabled due to schema uncertainty
+    // TODO: Re-enable once database schema for file storage is confirmed
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('File upload temporarily disabled')),
+    );
+  }
+
   Future<void> _uploadReport() async {
-    if (_title.isEmpty || _selectedFileName == null) {
+    if (_title.isEmpty || _farmId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in all required fields')),
       );
@@ -47,14 +125,50 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
 
     setState(() => _uploading = true);
 
-    // Simulate upload delay
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Include image path in notes for now (will be properly stored when file storage is implemented)
+      String enhancedNotes = _notes;
+      if (_imagePath != null) {
+        enhancedNotes = _notes.isEmpty
+            ? 'Image attached: ${_imagePath!.split('/').last}'
+            : '$_notes\n\nImage attached: ${_imagePath!.split('/').last}';
+      }
 
-    if (mounted) {
-      setState(() {
-        _uploading = false;
-        _submitted = true;
-      });
+      // Use the service method for database insert
+      await FarmService.insertReport(
+        farmId: _farmId!,
+        title: _title,
+        category: _category,
+        notes: enhancedNotes,
+      );
+
+      if (mounted) {
+        setState(() {
+          _uploading = false;
+          _submitted = true;
+        });
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Report submitted successfully'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+        // Trigger refresh callback
+        widget.onSubmitted?.call();
+      }
+    } catch (e) {
+      print('ERROR [ReportUpload]: Failed to upload report: $e');
+      if (mounted) {
+        setState(() => _uploading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to submit report: ${e.toString().replaceAll('Exception: ', '')}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -63,7 +177,7 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
       _title = '';
       _category = 'General inspection';
       _notes = '';
-      _selectedFileName = null;
+      _imagePath = null;
       _submitted = false;
     });
   }
@@ -97,18 +211,18 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
                   ),
                   const SizedBox(height: 12),
                   const Text(
-                    'Report uploaded',
+                    'Report submitted',
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: FarmoraColors.ink),
                   ),
                   const SizedBox(height: 6),
                   const Text(
-                    'Your report has been successfully uploaded and attached to today\'s records.',
+                    'Your report has been successfully submitted and attached to today\'s records.',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 12.5, color: FarmoraColors.inkSoft),
                   ),
                   const SizedBox(height: 20),
                   PrimaryButton(
-                    text: 'Upload another report',
+                    text: 'Submit another report',
                     onClick: _resetForm,
                   ),
                   const SizedBox(height: 10),
@@ -180,36 +294,94 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
                 ),
               ),
               const SizedBox(height: 14),
-              const Text('File', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: FarmoraColors.inkSoft)),
+              const Text('Photo (optional)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: FarmoraColors.inkSoft)),
               const SizedBox(height: 6),
-              FarmoraCard(
-                padding: const EdgeInsets.all(14),
-                onTap: _selectFile,
-                child: Row(
+              if (_imagePath != null)
+                Container(
+                  height: 150,
+                  decoration: BoxDecoration(
+                    color: FarmoraColors.surfaceSunken,
+                    border: Border.all(color: FarmoraColors.line),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: Container(
+                          width: double.infinity,
+                          height: 150,
+                          decoration: BoxDecoration(
+                            color: FarmoraColors.inkSoft,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.image, size: 32, color: Colors.white),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Image selected',
+                                style: const TextStyle(color: Colors.white, fontSize: 12),
+                              ),
+                              Text(
+                                _imagePath!.split('/').last,
+                                style: const TextStyle(color: Colors.white70, fontSize: 10),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                            onPressed: _removeImage,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Row(
                   children: [
-                    Icon(
-                      _selectedFileName != null ? Icons.check_circle : Icons.cloud_upload_outlined,
-                      color: _selectedFileName != null ? FarmoraColors.good : FarmoraColors.brand,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 12),
                     Expanded(
-                      child: Text(
-                        _selectedFileName ?? 'Tap to select file',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: _selectedFileName != null ? FarmoraColors.ink : FarmoraColors.inkSoft,
+                      child: FarmoraCard(
+                        padding: const EdgeInsets.all(12),
+                        onTap: _pickImageFromCamera,
+                        child: Column(
+                          children: [
+                            const Icon(Icons.camera_alt, size: 24, color: FarmoraColors.brand),
+                            const SizedBox(height: 4),
+                            const Text('Camera', style: TextStyle(fontSize: 12, color: FarmoraColors.ink)),
+                          ],
                         ),
                       ),
                     ),
-                    if (_selectedFileName != null)
-                      IconButton(
-                        icon: const Icon(Icons.close, size: 18),
-                        onPressed: () => setState(() => _selectedFileName = null),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: FarmoraCard(
+                        padding: const EdgeInsets.all(12),
+                        onTap: _pickImageFromGallery,
+                        child: Column(
+                          children: [
+                            const Icon(Icons.photo_library, size: 24, color: FarmoraColors.brand),
+                            const SizedBox(height: 4),
+                            const Text('Gallery', style: TextStyle(fontSize: 12, color: FarmoraColors.ink)),
+                          ],
+                        ),
                       ),
+                    ),
                   ],
                 ),
-              ),
               const SizedBox(height: 14),
               const Text('Observations / notes', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: FarmoraColors.inkSoft)),
               const SizedBox(height: 6),
@@ -251,8 +423,8 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
             border: Border(top: BorderSide(color: FarmoraColors.line)),
           ),
           child: PrimaryButton(
-            text: _uploading ? 'Uploading...' : 'Upload Report',
-            disabled: _uploading || _title.isEmpty || _selectedFileName == null,
+            text: _uploading ? 'Submitting...' : 'Submit Report',
+            disabled: _uploading || _title.isEmpty,
             onClick: _uploading ? () {} : _uploadReport,
           ),
         ),
