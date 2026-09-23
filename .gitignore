@@ -45,6 +45,7 @@ migrate_working_dir/
 /index.html
 /manifest.json
 /favicon.png
+/icons/
 
 # Symbolication related
 app.*.symbols
