@@ -110,13 +110,13 @@ class _ResourceMonitoringScreenState extends State<ResourceMonitoringScreen> {
                           message: 'Feed silo 02 level is below 15% threshold. Refill recommended.',
                         ),
                         const SizedBox(height: 18),
-                        Row(
+                        const Row(
                           children: [
                             Expanded(
                               child: FarmoraCard(
-                                padding: const EdgeInsets.all(14),
+                                padding: EdgeInsets.all(14),
                                 child: Column(
-                                  children: const [
+                                  children: [
                                     Align(
                                       alignment: Alignment.centerLeft,
                                       child: Text(
@@ -149,12 +149,12 @@ class _ResourceMonitoringScreenState extends State<ResourceMonitoringScreen> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 10),
+                            SizedBox(width: 10),
                             Expanded(
                               child: FarmoraCard(
-                                padding: const EdgeInsets.all(14),
+                                padding: EdgeInsets.all(14),
                                 child: Column(
-                                  children: const [
+                                  children: [
                                     Align(
                                       alignment: Alignment.centerLeft,
                                       child: Text(

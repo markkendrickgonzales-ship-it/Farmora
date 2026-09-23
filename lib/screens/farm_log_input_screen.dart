@@ -356,9 +356,9 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
                             children: [
                               const Icon(Icons.image, size: 32, color: Colors.white),
                               const SizedBox(height: 8),
-                              Text(
+                              const Text(
                                 'Image selected',
-                                style: const TextStyle(color: Colors.white, fontSize: 12),
+                                style: TextStyle(color: Colors.white, fontSize: 12),
                               ),
                               Text(
                                 _imagePath!.split('/').last,
@@ -374,7 +374,7 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
                         top: 8,
                         right: 8,
                         child: Container(
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: Colors.black54,
                             shape: BoxShape.circle,
                           ),
@@ -394,11 +394,11 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
                       child: FarmoraCard(
                         padding: const EdgeInsets.all(12),
                         onTap: _pickImageFromCamera,
-                        child: Column(
+                        child: const Column(
                           children: [
-                            const Icon(Icons.camera_alt, size: 24, color: FarmoraColors.brand),
-                            const SizedBox(height: 4),
-                            const Text('Camera', style: TextStyle(fontSize: 12, color: FarmoraColors.ink)),
+                            Icon(Icons.camera_alt, size: 24, color: FarmoraColors.brand),
+                            SizedBox(height: 4),
+                            Text('Camera', style: TextStyle(fontSize: 12, color: FarmoraColors.ink)),
                           ],
                         ),
                       ),
@@ -408,11 +408,11 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
                       child: FarmoraCard(
                         padding: const EdgeInsets.all(12),
                         onTap: _pickImageFromGallery,
-                        child: Column(
+                        child: const Column(
                           children: [
-                            const Icon(Icons.photo_library, size: 24, color: FarmoraColors.brand),
-                            const SizedBox(height: 4),
-                            const Text('Gallery', style: TextStyle(fontSize: 12, color: FarmoraColors.ink)),
+                            Icon(Icons.photo_library, size: 24, color: FarmoraColors.brand),
+                            SizedBox(height: 4),
+                            Text('Gallery', style: TextStyle(fontSize: 12, color: FarmoraColors.ink)),
                           ],
                         ),
                       ),
@@ -423,9 +423,9 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
               FarmoraCard(
                 padding: const EdgeInsets.all(12),
                 border: Border.all(color: Colors.transparent),
-                child: Text(
+                child: const Text(
                   'Timestamp will be recorded automatically when you submit.',
-                  style: const TextStyle(fontSize: 11, color: FarmoraColors.inkSoft),
+                  style: TextStyle(fontSize: 11, color: FarmoraColors.inkSoft),
                 ),
               ),
             ],

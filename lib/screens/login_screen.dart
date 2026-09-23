@@ -65,10 +65,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 colors: [FarmoraColors.brand, Color(0xFF24483E)],
               ),
             ),
-            child: Column(
+            child: const Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
                   'Farmora',
                   style: TextStyle(

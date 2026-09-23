@@ -79,9 +79,9 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
       if (!mounted) return;
       
       setState(() {
-        _telemetryHistory = results[0] as List<Map<String, dynamic>>;
-        _alerts = results[1] as List<Map<String, dynamic>>;
-        _feedingLogs = results[2] as List<Map<String, dynamic>>;
+        _telemetryHistory = results[0];
+        _alerts = results[1];
+        _feedingLogs = results[2];
         _loading = false;
       });
       

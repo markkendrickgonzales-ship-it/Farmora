@@ -27,7 +27,7 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
   String? _error;
   List<Map<String, dynamic>> _farms = [];
   List<Map<String, dynamic>> _logs = [];
-  Map<String, List<Map<String, dynamic>>> _groupedLogs = {};
+  final Map<String, List<Map<String, dynamic>>> _groupedLogs = {};
   Map<String, List<Map<String, dynamic>>> _monthGroups = {};
   final Set<String> _expandedMonths = {};
   String? _selectedFarmId;
@@ -194,7 +194,7 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        ScreenHeader(
+        const ScreenHeader(
           title: 'Farm Logs',
         ),
         Expanded(
@@ -269,7 +269,7 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.inbox_outlined, size: 48, color: FarmoraColors.inkFaint),
+                                      const Icon(Icons.inbox_outlined, size: 48, color: FarmoraColors.inkFaint),
                                       const SizedBox(height: 12),
                                       const Text(
                                         'No logs found',
@@ -450,7 +450,7 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
                                                 ),
                                               ),
                                             );
-                                          }).toList(),
+                                          }),
                                         ],
                                         const SizedBox(height: 16),
                                       ],

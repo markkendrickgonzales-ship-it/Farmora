@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../theme/app_theme.dart';
-import '../widgets/farmora_card.dart';
 import '../widgets/screen_header.dart';
 import '../widgets/primary_button.dart';
 

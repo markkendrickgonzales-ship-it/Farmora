@@ -192,11 +192,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 10),
-              StatusBadge(
+              const StatusBadge(
                 level: 'good',
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
+                  children: [
                     Icon(Icons.check_circle_outline, size: 11),
                     SizedBox(width: 5),
                     Text('SYSTEM INTEGRITY: ONLINE'),

@@ -45,24 +45,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: const Icon(Icons.person, size: 26, color: FarmoraColors.brand),
               ),
               const SizedBox(width: 12),
-              Column(
+              const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Silas Thorne',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: FarmoraColors.ink),
                   ),
-                  const SizedBox(height: 1),
-                  const Text(
+                  SizedBox(height: 1),
+                  Text(
                     'Senior farm manager',
                     style: TextStyle(fontSize: 12, color: FarmoraColors.inkSoft),
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   StatusBadge(
                     level: 'good',
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
-                      children: const [
+                      children: [
                         Icon(Icons.check_circle_outline, size: 11),
                         SizedBox(width: 4),
                         Text('VERIFIED · ID FM-1044'),
@@ -78,9 +78,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              _SettingsSection(
+              const _SettingsSection(
                 title: 'PERSONAL INFORMATION',
-                children: const [
+                children: [
                   _ReadonlyRow(label: 'Full name', value: 'Silas Thorne'),
                   Divider(height: 1, color: FarmoraColors.line),
                   _ReadonlyRow(label: 'Email address', value: 'silas.thorne@farmora.io'),
