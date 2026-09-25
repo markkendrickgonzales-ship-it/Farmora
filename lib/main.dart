@@ -202,9 +202,11 @@ class _MainShellState extends State<MainShell> {
             children: [
               Expanded(
                 child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  switchInCurve: Curves.easeInOut,
-                  switchOutCurve: Curves.easeInOut,
+                  duration: const Duration(milliseconds: 320),
+                  // shellScreenTransition applies its own ease, so feed it a
+                  // linear ramp to avoid double-easing.
+                  switchInCurve: Curves.linear,
+                  switchOutCurve: Curves.linear,
                   transitionBuilder: shellScreenTransition,
                   child: KeyedSubtree(
                     // A new key per screen triggers the slide + fade.
