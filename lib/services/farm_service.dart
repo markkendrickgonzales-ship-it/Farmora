@@ -305,6 +305,23 @@ class FarmService {
     return List<Map<String, dynamic>>.from(data as List);
   }
 
+  // ─── Farming advisories ─────────────────────────────────────────────────
+
+  /// Returns all rows from the `farming_advisories` guide table by id.
+  static Future<List<Map<String, dynamic>>> fetchAdvisories() async {
+    try {
+      final data = await supabase
+          .from('farming_advisories')
+          .select()
+          .order('id', ascending: true);
+      print('DEBUG: fetchAdvisories data = $data');
+      return List<Map<String, dynamic>>.from(data as List);
+    } catch (error) {
+      print('DEBUG: fetchAdvisories error = $error');
+      rethrow;
+    }
+  }
+
   // ─── User profiles ───────────────────────────────────────────────────────
 
   /// The currently signed-in user (null when logged out).

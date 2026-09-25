@@ -4,11 +4,13 @@ import '../theme/app_theme.dart';
 class TopBar extends StatelessWidget {
   final VoidCallback onBell;
   final VoidCallback? onSearch;
+  final VoidCallback? onAdvisory;
 
   const TopBar({
     super.key,
     required this.onBell,
     this.onSearch,
+    this.onAdvisory,
   });
 
   @override
@@ -17,6 +19,10 @@ class TopBar extends StatelessWidget {
       children: [
         if (onSearch != null) ...[
           _iconBtn(Icons.search, onSearch!),
+          const SizedBox(width: 8),
+        ],
+        if (onAdvisory != null) ...[
+          _iconBtn(Icons.lightbulb_outline, onAdvisory!),
           const SizedBox(width: 8),
         ],
         Stack(

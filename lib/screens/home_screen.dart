@@ -188,7 +188,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
-                  TopBar(onBell: () => widget.go('notifications')),
+                  TopBar(
+                    onBell: () => widget.go('notifications'),
+                    onAdvisory: () => widget.go('advisoryList'),
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
@@ -297,6 +300,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                           ],
+                        ),
+                        const SizedBox(height: 18),
+
+                        // Advisory & Guides entry
+                        _AdvisoryBannerCard(
+                          onTap: () => widget.go('advisoryList'),
                         ),
                         const SizedBox(height: 18),
 
@@ -593,6 +602,67 @@ class _ActuatorRow extends StatelessWidget {
             value: on,
             onChanged: onChange,
             activeTrackColor: FarmoraColors.brand,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Prominent dashboard entry point to the Advisory & Guides library.
+class _AdvisoryBannerCard extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _AdvisoryBannerCard({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return FarmoraCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(14),
+      border: Border.all(color: FarmoraColors.brand.withOpacity(0.35)),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: const BoxDecoration(
+              color: FarmoraColors.brandSoft,
+              borderRadius: BorderRadius.all(Radius.circular(9)),
+            ),
+            child: const Icon(Icons.lightbulb_outline,
+                size: 22, color: FarmoraColors.brand),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Advisory & Guides',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: FarmoraColors.ink,
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  'Step-by-step field playbooks for current situations',
+                  style: TextStyle(fontSize: 12, color: FarmoraColors.inkSoft),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            decoration: const BoxDecoration(
+              color: FarmoraColors.brand,
+              borderRadius: BorderRadius.all(Radius.circular(7)),
+            ),
+            child: const Icon(Icons.arrow_forward_rounded,
+                size: 15, color: Colors.white),
           ),
         ],
       ),

@@ -18,6 +18,7 @@ import 'screens/camera_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/feedback_screen.dart';
+import 'screens/advisory_list_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -149,6 +150,8 @@ class _MainShellState extends State<MainShell> {
         return ProfileScreen(go: _go, onSignOut: _signOut);
       case 'feedback':
         return FeedbackScreen(go: _go);
+      case 'advisoryList':
+        return AdvisoryListScreen(go: _go);
       default:
         return HomeScreen(go: _go);
     }
@@ -174,6 +177,7 @@ class _MainShellState extends State<MainShell> {
           'camera': 'farmLogs',
           'notifications': 'home',
           'feedback': 'profile',
+          'advisoryList': 'home',
         };
         _go(childParents[_screen] ?? 'home');
       },
