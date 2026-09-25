@@ -58,22 +58,27 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   Container(
                     width: 52,
                     height: 52,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: FarmoraColors.goodSoft,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.check, size: 26, color: FarmoraColors.good),
+                    child:
+                        Icon(Icons.check, size: 26, color: FarmoraColors.good),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
+                  Text(
                     'Thanks for the feedback',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: FarmoraColors.ink),
+                    style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: FarmoraColors.ink),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
+                  Text(
                     'Your responses help the Farmora team improve the field experience.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12.5, color: FarmoraColors.inkSoft),
+                    style:
+                        TextStyle(fontSize: 12.5, color: FarmoraColors.inkSoft),
                   ),
                 ],
               ),
@@ -96,7 +101,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             children: [
               Text(
                 'Question ${_step + 1} of 10 · Standard usability scale',
-                style: const TextStyle(fontSize: 11, color: FarmoraColors.inkSoft),
+                style: TextStyle(fontSize: 11, color: FarmoraColors.inkSoft),
               ),
               const SizedBox(height: 6),
               ClipRRect(
@@ -117,7 +122,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             children: [
               Text(
                 _questions[_step],
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: FarmoraColors.ink,
@@ -136,12 +141,17 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                     },
                     borderRadius: BorderRadius.circular(9),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 13, vertical: 11),
                       decoration: BoxDecoration(
-                        color: selected ? FarmoraColors.brandSoft : FarmoraColors.surface,
+                        color: selected
+                            ? FarmoraColors.brandSoft
+                            : FarmoraColors.surface,
                         borderRadius: BorderRadius.circular(9),
                         border: Border.all(
-                          color: selected ? FarmoraColors.brand : FarmoraColors.line,
+                          color: selected
+                              ? FarmoraColors.brand
+                              : FarmoraColors.line,
                           width: 1.5,
                         ),
                       ),
@@ -153,7 +163,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: selected ? FarmoraColors.brand : FarmoraColors.inkFaint,
+                                color: selected
+                                    ? FarmoraColors.brand
+                                    : FarmoraColors.inkFaint,
                                 width: 2,
                               ),
                             ),
@@ -162,7 +174,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                                 ? Container(
                                     width: 8,
                                     height: 8,
-                                    decoration: const BoxDecoration(
+                                    decoration: BoxDecoration(
                                       color: FarmoraColors.brand,
                                       shape: BoxShape.circle,
                                     ),
@@ -175,7 +187,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                             style: TextStyle(
                               fontSize: 13,
                               color: FarmoraColors.ink,
-                              fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+                              fontWeight:
+                                  selected ? FontWeight.bold : FontWeight.w500,
                             ),
                           ),
                         ],
@@ -189,7 +202,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         ),
         Container(
           padding: const EdgeInsets.all(16),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             border: Border(top: BorderSide(color: FarmoraColors.line)),
           ),
           child: Row(
@@ -200,12 +213,12 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                     onPressed: () => setState(() => _step--),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 13),
-                      side: const BorderSide(color: FarmoraColors.line),
+                      side: BorderSide(color: FarmoraColors.line),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(9),
                       ),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Back',
                       style: TextStyle(
                         fontSize: 13,

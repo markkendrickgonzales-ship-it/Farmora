@@ -55,7 +55,7 @@ class BannerWidget extends StatelessWidget {
           Expanded(
             child: RichText(
               text: TextSpan(
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12.5,
                   color: FarmoraColors.ink,
                   height: 1.45,

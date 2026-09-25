@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/farmora_card.dart';
 import '../widgets/status_badge.dart';
@@ -39,14 +39,18 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
       final farms = await FarmService.fetchFarms();
       if (!mounted) return;
       if (farms.isEmpty) {
-        print('ERROR [EnvMonitoring]: Data fetch returned empty farms array []');
-        setState(() { _loading = false; _error = 'No farms found.'; });
+        print(
+            'ERROR [EnvMonitoring]: Data fetch returned empty farms array []');
+        setState(() {
+          _loading = false;
+          _error = 'No farms found.';
+        });
         return;
       }
       _farmId = farms.first['farm_id']?.toString() ?? '';
       final t = await FarmService.fetchLatestTelemetry(_farmId!);
       if (!mounted) return;
-      
+
       if (t == null) {
         print('ERROR [EnvMonitoring]: Telemetry array was empty []');
       } else {
@@ -61,7 +65,10 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
     } catch (e) {
       print('ERROR [EnvMonitoring]: Failed to fetch data: $e');
       if (!mounted) return;
-      setState(() { _error = 'Load failed: $e'; _loading = false; });
+      setState(() {
+        _error = 'Load failed: $e';
+        _loading = false;
+      });
     }
   }
 
@@ -70,7 +77,11 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
     try {
       if (_farmId != null) {
         final t = await FarmService.fetchLatestTelemetry(_farmId!);
-        if (mounted) setState(() { _telemetry = t; _lastSync = 'Just now'; });
+        if (mounted)
+          setState(() {
+            _telemetry = t;
+            _lastSync = 'Just now';
+          });
       }
     } finally {
       if (mounted) setState(() => _refreshing = false);
@@ -89,42 +100,62 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
   }
 
   String _tempStr() => '${_fmt("temperature_c")}°C';
-  String _humStr()  => '${_fmt("humidity_percent")}%';
+  String _humStr() => '${_fmt("humidity_percent")}%';
 
   String _humLevel() {
     final v = (_telemetry?['humidity_percent'] as num?)?.toDouble();
     if (v == null) {
-      print('ERROR [EnvMonitoring]: humidity_percent is null, cannot determine level');
+      print(
+          'ERROR [EnvMonitoring]: humidity_percent is null, cannot determine level');
       return 'good';
     }
-    return v >= 75 ? 'crit' : v >= 65 ? 'warn' : 'good';
+    return v >= 75
+        ? 'crit'
+        : v >= 65
+            ? 'warn'
+            : 'good';
   }
 
   String _humTag() {
     final v = (_telemetry?['humidity_percent'] as num?)?.toDouble();
     if (v == null) {
-      print('ERROR [EnvMonitoring]: humidity_percent is null, cannot determine tag');
+      print(
+          'ERROR [EnvMonitoring]: humidity_percent is null, cannot determine tag');
       return 'NORMAL';
     }
-    return v >= 75 ? 'HIGH' : v >= 65 ? 'WARNING' : 'NORMAL';
+    return v >= 75
+        ? 'HIGH'
+        : v >= 65
+            ? 'WARNING'
+            : 'NORMAL';
   }
 
   String _tempLevel() {
     final v = (_telemetry?['temperature_c'] as num?)?.toDouble();
     if (v == null) {
-      print('ERROR [EnvMonitoring]: temperature_c is null, cannot determine level');
+      print(
+          'ERROR [EnvMonitoring]: temperature_c is null, cannot determine level');
       return 'good';
     }
-    return v >= 30 ? 'crit' : v >= 27 ? 'warn' : 'good';
+    return v >= 30
+        ? 'crit'
+        : v >= 27
+            ? 'warn'
+            : 'good';
   }
 
   String _tempTag() {
     final v = (_telemetry?['temperature_c'] as num?)?.toDouble();
     if (v == null) {
-      print('ERROR [EnvMonitoring]: temperature_c is null, cannot determine tag');
+      print(
+          'ERROR [EnvMonitoring]: temperature_c is null, cannot determine tag');
       return 'NORMAL';
     }
-    return v >= 30 ? 'HIGH' : v >= 27 ? 'WARM' : 'NORMAL';
+    return v >= 30
+        ? 'HIGH'
+        : v >= 27
+            ? 'WARM'
+            : 'NORMAL';
   }
 
   @override
@@ -139,9 +170,11 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
           child: _loading
               ? const Center(child: CircularProgressIndicator())
               : _error != null
-                  ? Center(child: Padding(
+                  ? Center(
+                      child: Padding(
                       padding: const EdgeInsets.all(24),
-                      child: Text(_error!, style: const TextStyle(color: FarmoraColors.crit)),
+                      child: Text(_error!,
+                          style: TextStyle(color: FarmoraColors.crit)),
                     ))
                   : ListView(
                       padding: const EdgeInsets.all(16),
@@ -159,7 +192,7 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
                                 : 'Humidity at ${_humStr()} — review ventilation settings.',
                           ),
                         const SizedBox(height: 18),
-                        const Text(
+                        Text(
                           'Real-time data',
                           style: TextStyle(
                             fontSize: 13,
@@ -179,7 +212,11 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
                                 level: _tempLevel(),
                                 tag: _tempTag(),
                               ),
-                              const Divider(height: 1, color: FarmoraColors.line, indent: 12, endIndent: 12),
+                              Divider(
+                                  height: 1,
+                                  color: FarmoraColors.line,
+                                  indent: 12,
+                                  endIndent: 12),
                               _DataRow(
                                 icon: Icons.water_drop_outlined,
                                 label: 'Humidity',
@@ -187,7 +224,11 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
                                 level: _humLevel(),
                                 tag: _humTag(),
                               ),
-                              const Divider(height: 1, color: FarmoraColors.line, indent: 12, endIndent: 12),
+                              Divider(
+                                  height: 1,
+                                  color: FarmoraColors.line,
+                                  indent: 12,
+                                  endIndent: 12),
                               _DataRow(
                                 icon: Icons.air,
                                 label: 'Ammonia',
@@ -199,7 +240,7 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
                           ),
                         ),
                         const SizedBox(height: 18),
-                        const Text(
+                        Text(
                           'Climate control',
                           style: TextStyle(
                             fontSize: 13,
@@ -212,16 +253,39 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
                           padding: const EdgeInsets.all(4),
                           child: Column(
                             children: [
-                              _ClimateRow(name: 'Exhaust fans', desc: 'Main ventilation units', on: _exhaust, tag: 'Manual mode', onChange: (v) => setState(() => _exhaust = v)),
-                              const Divider(height: 1, color: FarmoraColors.line, indent: 12, endIndent: 12),
-                              _ClimateRow(name: 'Circulation fans', desc: 'Internal air movement', on: _circulation, onChange: (v) => setState(() => _circulation = v)),
-                              const Divider(height: 1, color: FarmoraColors.line, indent: 12, endIndent: 12),
-                              _ClimateRow(name: 'Ventilation flaps', desc: 'Ceiling ridge vents', on: _flaps, onChange: (v) => setState(() => _flaps = v)),
+                              _ClimateRow(
+                                  name: 'Exhaust fans',
+                                  desc: 'Main ventilation units',
+                                  on: _exhaust,
+                                  tag: 'Manual mode',
+                                  onChange: (v) =>
+                                      setState(() => _exhaust = v)),
+                              Divider(
+                                  height: 1,
+                                  color: FarmoraColors.line,
+                                  indent: 12,
+                                  endIndent: 12),
+                              _ClimateRow(
+                                  name: 'Circulation fans',
+                                  desc: 'Internal air movement',
+                                  on: _circulation,
+                                  onChange: (v) =>
+                                      setState(() => _circulation = v)),
+                              Divider(
+                                  height: 1,
+                                  color: FarmoraColors.line,
+                                  indent: 12,
+                                  endIndent: 12),
+                              _ClimateRow(
+                                  name: 'Ventilation flaps',
+                                  desc: 'Ceiling ridge vents',
+                                  on: _flaps,
+                                  onChange: (v) => setState(() => _flaps = v)),
                             ],
                           ),
                         ),
                         const SizedBox(height: 18),
-                        const Text(
+                        Text(
                           'Latest reading',
                           style: TextStyle(
                             fontSize: 13,
@@ -238,11 +302,21 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text('TEMPERATURE', style: TextStyle(fontSize: 11, color: FarmoraColors.inkSoft)),
+                                    Text('TEMPERATURE',
+                                        style: TextStyle(
+                                            fontSize: 11,
+                                            color: FarmoraColors.inkSoft)),
                                     const SizedBox(height: 3),
-                                    Text(_tempStr(), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: FarmoraColors.ink)),
+                                    Text(_tempStr(),
+                                        style: TextStyle(
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.bold,
+                                            color: FarmoraColors.ink)),
                                     const SizedBox(height: 1),
-                                    Text(_tempTag(), style: const TextStyle(fontSize: 10.5, color: FarmoraColors.inkFaint)),
+                                    Text(_tempTag(),
+                                        style: TextStyle(
+                                            fontSize: 10.5,
+                                            color: FarmoraColors.inkFaint)),
                                   ],
                                 ),
                               ),
@@ -254,11 +328,21 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text('HUMIDITY', style: TextStyle(fontSize: 11, color: FarmoraColors.inkSoft)),
+                                    Text('HUMIDITY',
+                                        style: TextStyle(
+                                            fontSize: 11,
+                                            color: FarmoraColors.inkSoft)),
                                     const SizedBox(height: 3),
-                                    Text(_humStr(), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: FarmoraColors.ink)),
+                                    Text(_humStr(),
+                                        style: TextStyle(
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.bold,
+                                            color: FarmoraColors.ink)),
                                     const SizedBox(height: 1),
-                                    Text(_humTag(), style: const TextStyle(fontSize: 10.5, color: FarmoraColors.inkFaint)),
+                                    Text(_humTag(),
+                                        style: TextStyle(
+                                            fontSize: 10.5,
+                                            color: FarmoraColors.inkFaint)),
                                   ],
                                 ),
                               ),
@@ -274,13 +358,23 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('GATEWAY FM-02', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: FarmoraColors.ink)),
+                                  Text('GATEWAY FM-02',
+                                      style: TextStyle(
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: FarmoraColors.ink)),
                                   const SizedBox(height: 2),
-                                  Text('Connected · last sync $_lastSync', style: const TextStyle(fontSize: 11, color: FarmoraColors.good)),
+                                  Text('Connected · last sync $_lastSync',
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          color: FarmoraColors.good)),
                                 ],
                               ),
                               IconButton(
-                                icon: Icon(_refreshing ? Icons.sync : Icons.refresh, size: 18, color: FarmoraColors.brand),
+                                icon: Icon(
+                                    _refreshing ? Icons.sync : Icons.refresh,
+                                    size: 18,
+                                    color: FarmoraColors.brand),
                                 onPressed: _handleRefresh,
                               ),
                             ],
@@ -323,14 +417,22 @@ class _DataRow extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: FarmoraColors.ink)),
+                  Text(label,
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: FarmoraColors.ink)),
                 ],
               ),
             ],
           ),
           Row(
             children: [
-              Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: FarmoraColors.ink)),
+              Text(value,
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: FarmoraColors.ink)),
               const SizedBox(width: 8),
               StatusBadge(level: level, child: Text(tag)),
             ],
@@ -366,11 +468,15 @@ class _ClimateRow extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: FarmoraColors.ink)),
+              Text(name,
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: FarmoraColors.ink)),
               const SizedBox(height: 1),
               Text(
                 '$desc${tag != null ? " · $tag" : ""}',
-                style: const TextStyle(fontSize: 11, color: FarmoraColors.inkFaint),
+                style: TextStyle(fontSize: 11, color: FarmoraColors.inkFaint),
               ),
             ],
           ),

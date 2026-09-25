@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/farmora_card.dart';
 import '../widgets/screen_header.dart';
-import '../widgets/status_badge.dart';
-import '../widgets/primary_button.dart';
 import '../services/farm_service.dart';
 
 class FarmLogsScreen extends StatefulWidget {
@@ -103,7 +101,8 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
     }
   }
 
-  Map<String, List<Map<String, dynamic>>> _groupLogsByMonth(List<Map<String, dynamic>> logs) {
+  Map<String, List<Map<String, dynamic>>> _groupLogsByMonth(
+      List<Map<String, dynamic>> logs) {
     final grouped = <String, List<Map<String, dynamic>>>{};
 
     for (final log in logs) {
@@ -114,7 +113,8 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
       if (dateTime == null) continue;
 
       // Create a month key (YYYY-MM format for sorting)
-      final monthKey = '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}';
+      final monthKey =
+          '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}';
 
       if (!grouped.containsKey(monthKey)) {
         grouped[monthKey] = [];
@@ -143,8 +143,18 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
     if (year == 0 || month == 0) return monthKey;
 
     final months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
     ];
     return '${months[month - 1]} $year';
   }
@@ -204,55 +214,68 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
                   ? Center(
                       child: Padding(
                         padding: const EdgeInsets.all(24),
-                        child: Text(_error!, style: const TextStyle(color: FarmoraColors.crit)),
+                        child: Text(_error!,
+                            style: TextStyle(color: FarmoraColors.crit)),
                       ),
                     )
                   : Column(
                       children: [
                         // Farm Filter Dropdown
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          decoration: const BoxDecoration(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
                             color: FarmoraColors.surface,
-                            border: Border(bottom: BorderSide(color: FarmoraColors.line)),
+                            border: Border(
+                                bottom: BorderSide(color: FarmoraColors.line)),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.filter_list, size: 18, color: FarmoraColors.inkSoft),
+                              Icon(Icons.filter_list,
+                                  size: 18, color: FarmoraColors.inkSoft),
                               const SizedBox(width: 8),
-                              const Text(
+                              Text(
                                 'Filter by farm:',
-                                style: TextStyle(fontSize: 13, color: FarmoraColors.inkSoft),
+                                style: TextStyle(
+                                    fontSize: 13, color: FarmoraColors.inkSoft),
                               ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
                                   decoration: BoxDecoration(
                                     color: FarmoraColors.surfaceSunken,
-                                    border: Border.all(color: FarmoraColors.line),
+                                    border:
+                                        Border.all(color: FarmoraColors.line),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: DropdownButtonHideUnderline(
                                     child: DropdownButton<String>(
                                       value: _selectedFarmId,
                                       isExpanded: true,
-                                      style: const TextStyle(fontSize: 13, color: FarmoraColors.ink),
+                                      style: TextStyle(
+                                          fontSize: 13,
+                                          color: FarmoraColors.ink),
                                       onChanged: (val) async {
                                         if (val != null) {
-                                          final farm = _farms.firstWhere((f) => f['farm_id'] == val);
+                                          final farm = _farms.firstWhere(
+                                              (f) => f['farm_id'] == val);
                                           setState(() {
                                             _selectedFarmId = val;
-                                            _selectedFarmName = 'Farm ${val.substring(0, 8)}';
+                                            _selectedFarmName =
+                                                'Farm ${val.substring(0, 8)}';
                                           });
                                           await _loadLogs(val);
                                         }
                                       },
                                       items: _farms.map((farm) {
-                                        final farmId = farm['farm_id'] as String?;
+                                        final farmId =
+                                            farm['farm_id'] as String?;
                                         return DropdownMenuItem(
                                           value: farmId,
-                                          child: Text('Farm ${farmId?.substring(0, 8) ?? 'Unknown'}'),
+                                          child: Text(
+                                              'Farm ${farmId?.substring(0, 8) ?? 'Unknown'}'),
                                         );
                                       }).toList(),
                                     ),
@@ -269,16 +292,22 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      const Icon(Icons.inbox_outlined, size: 48, color: FarmoraColors.inkFaint),
+                                      Icon(Icons.inbox_outlined,
+                                          size: 48,
+                                          color: FarmoraColors.inkFaint),
                                       const SizedBox(height: 12),
-                                      const Text(
+                                      Text(
                                         'No logs found',
-                                        style: TextStyle(fontSize: 14, color: FarmoraColors.inkSoft),
+                                        style: TextStyle(
+                                            fontSize: 14,
+                                            color: FarmoraColors.inkSoft),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
                                         '$_selectedFarmName has no feeding/watering records yet',
-                                        style: const TextStyle(fontSize: 12, color: FarmoraColors.inkFaint),
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            color: FarmoraColors.inkFaint),
                                       ),
                                     ],
                                   ),
@@ -287,60 +316,85 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
                                   padding: const EdgeInsets.all(16),
                                   itemCount: _monthGroups.length,
                                   itemBuilder: (context, index) {
-                                    final monthKeys = _monthGroups.keys.toList();
+                                    final monthKeys =
+                                        _monthGroups.keys.toList();
                                     final monthKey = monthKeys[index];
-                                    final logsForMonth = _monthGroups[monthKey]!;
-                                    final isExpanded = _expandedMonths.contains(monthKey);
+                                    final logsForMonth =
+                                        _monthGroups[monthKey]!;
+                                    final isExpanded =
+                                        _expandedMonths.contains(monthKey);
 
                                     return Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         // Month Folder Header
                                         GestureDetector(
-                                          onTap: () => _toggleMonthExpansion(monthKey),
+                                          onTap: () =>
+                                              _toggleMonthExpansion(monthKey),
                                           child: Container(
-                                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 12, horizontal: 16),
                                             decoration: BoxDecoration(
-                                              color: FarmoraColors.brand.withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(12),
-                                              border: Border.all(color: FarmoraColors.brand.withOpacity(0.2)),
+                                              color: FarmoraColors.brand
+                                                  .withOpacity(0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                  color: FarmoraColors.brand
+                                                      .withOpacity(0.2)),
                                             ),
                                             child: Row(
                                               children: [
                                                 Icon(
-                                                  isExpanded ? Icons.folder_open : Icons.folder,
+                                                  isExpanded
+                                                      ? Icons.folder_open
+                                                      : Icons.folder,
                                                   color: FarmoraColors.brand,
                                                   size: 24,
                                                 ),
                                                 const SizedBox(width: 12),
                                                 Expanded(
                                                   child: Text(
-                                                    _formatMonthHeader(monthKey),
-                                                    style: const TextStyle(
+                                                    _formatMonthHeader(
+                                                        monthKey),
+                                                    style: TextStyle(
                                                       fontSize: 15,
-                                                      fontWeight: FontWeight.bold,
-                                                      color: FarmoraColors.brand,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color:
+                                                          FarmoraColors.brand,
                                                     ),
                                                   ),
                                                 ),
                                                 Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 4),
                                                   decoration: BoxDecoration(
-                                                    color: FarmoraColors.brand.withOpacity(0.2),
-                                                    borderRadius: BorderRadius.circular(12),
+                                                    color: FarmoraColors.brand
+                                                        .withOpacity(0.2),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            12),
                                                   ),
                                                   child: Text(
                                                     '${logsForMonth.length} logs',
-                                                    style: const TextStyle(
+                                                    style: TextStyle(
                                                       fontSize: 11,
-                                                      fontWeight: FontWeight.w600,
-                                                      color: FarmoraColors.brand,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color:
+                                                          FarmoraColors.brand,
                                                     ),
                                                   ),
                                                 ),
                                                 const SizedBox(width: 8),
                                                 Icon(
-                                                  isExpanded ? Icons.expand_less : Icons.expand_more,
+                                                  isExpanded
+                                                      ? Icons.expand_less
+                                                      : Icons.expand_more,
                                                   color: FarmoraColors.brand,
                                                   size: 20,
                                                 ),
@@ -352,96 +406,150 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
                                         if (isExpanded) ...[
                                           const SizedBox(height: 12),
                                           ...logsForMonth.map((log) {
-                                            final actionType = log['action_type'] as String? ?? 'Unknown';
-                                            final amount = (log['amount'] as num?)?.toDouble() ?? 0;
-                                            final unit = log['unit'] as String? ?? '';
-                                            final actionTime = log['action_time'] as String?;
-                                            final notes = log['notes'] as String?;
+                                            final actionType =
+                                                log['action_type'] as String? ??
+                                                    'Unknown';
+                                            final amount =
+                                                (log['amount'] as num?)
+                                                        ?.toDouble() ??
+                                                    0;
+                                            final unit =
+                                                log['unit'] as String? ?? '';
+                                            final actionTime =
+                                                log['action_time'] as String?;
+                                            final notes =
+                                                log['notes'] as String?;
 
                                             return Padding(
-                                              padding: const EdgeInsets.only(bottom: 10),
+                                              padding: const EdgeInsets.only(
+                                                  bottom: 10),
                                               child: FarmoraCard(
-                                                padding: const EdgeInsets.all(14),
+                                                padding:
+                                                    const EdgeInsets.all(14),
                                                 child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
                                                   children: [
                                                     Row(
                                                       children: [
                                                         Container(
                                                           width: 40,
                                                           height: 40,
-                                                          decoration: BoxDecoration(
-                                                            color: _getActionColor(actionType).withOpacity(0.1),
-                                                            borderRadius: BorderRadius.circular(10),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: _getActionColor(
+                                                                    actionType)
+                                                                .withOpacity(
+                                                                    0.1),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        10),
                                                           ),
                                                           child: Center(
                                                             child: Text(
-                                                              _getActionIcon(actionType),
-                                                              style: const TextStyle(fontSize: 20),
+                                                              _getActionIcon(
+                                                                  actionType),
+                                                              style:
+                                                                  const TextStyle(
+                                                                      fontSize:
+                                                                          20),
                                                             ),
                                                           ),
                                                         ),
-                                                        const SizedBox(width: 12),
+                                                        const SizedBox(
+                                                            width: 12),
                                                         Expanded(
                                                           child: Column(
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
                                                             children: [
                                                               Text(
                                                                 actionType,
-                                                                style: const TextStyle(
-                                                                  fontSize: 13.5,
-                                                                  fontWeight: FontWeight.bold,
-                                                                  color: FarmoraColors.ink,
+                                                                style:
+                                                                    TextStyle(
+                                                                  fontSize:
+                                                                      13.5,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color:
+                                                                      FarmoraColors
+                                                                          .ink,
                                                                 ),
                                                               ),
-                                                              const SizedBox(height: 2),
+                                                              const SizedBox(
+                                                                  height: 2),
                                                               Text(
                                                                 '${amount.toStringAsFixed(1)} $unit',
-                                                                style: const TextStyle(
+                                                                style:
+                                                                    TextStyle(
                                                                   fontSize: 12,
-                                                                  color: FarmoraColors.inkSoft,
+                                                                  color: FarmoraColors
+                                                                      .inkSoft,
                                                                 ),
                                                               ),
                                                             ],
                                                           ),
                                                         ),
                                                         Column(
-                                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .end,
                                                           children: [
                                                             Text(
-                                                              _formatDate(actionTime),
-                                                              style: const TextStyle(
+                                                              _formatDate(
+                                                                  actionTime),
+                                                              style: TextStyle(
                                                                 fontSize: 11,
-                                                                fontWeight: FontWeight.w600,
-                                                                color: FarmoraColors.inkSoft,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                                color:
+                                                                    FarmoraColors
+                                                                        .inkSoft,
                                                               ),
                                                             ),
-                                                            const SizedBox(height: 2),
+                                                            const SizedBox(
+                                                                height: 2),
                                                             Text(
-                                                              _formatTime(actionTime),
-                                                              style: const TextStyle(
+                                                              _formatTime(
+                                                                  actionTime),
+                                                              style: TextStyle(
                                                                 fontSize: 11,
-                                                                color: FarmoraColors.inkFaint,
+                                                                color:
+                                                                    FarmoraColors
+                                                                        .inkFaint,
                                                               ),
                                                             ),
                                                           ],
                                                         ),
                                                       ],
                                                     ),
-                                                    if (notes != null && notes.isNotEmpty) ...[
+                                                    if (notes != null &&
+                                                        notes.isNotEmpty) ...[
                                                       const SizedBox(height: 8),
                                                       Container(
-                                                        padding: const EdgeInsets.all(8),
-                                                        decoration: BoxDecoration(
-                                                          color: FarmoraColors.surfaceSunken,
-                                                          borderRadius: BorderRadius.circular(6),
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(8),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: FarmoraColors
+                                                              .surfaceSunken,
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(6),
                                                         ),
                                                         child: Text(
                                                           notes,
-                                                          style: const TextStyle(
+                                                          style: TextStyle(
                                                             fontSize: 11,
-                                                            color: FarmoraColors.inkSoft,
-                                                            fontStyle: FontStyle.italic,
+                                                            color: FarmoraColors
+                                                                .inkSoft,
+                                                            fontStyle: FontStyle
+                                                                .italic,
                                                           ),
                                                         ),
                                                       ),

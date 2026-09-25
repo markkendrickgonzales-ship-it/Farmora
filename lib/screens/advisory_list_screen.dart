@@ -102,13 +102,13 @@ class _AdvisoryListScreenState extends State<AdvisoryListScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.cloud_off_outlined,
+                            Icon(Icons.cloud_off_outlined,
                                 size: 34, color: FarmoraColors.inkFaint),
                             const SizedBox(height: 10),
                             Text(
                               _error!,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   color: FarmoraColors.crit, fontSize: 13),
                             ),
                             const SizedBox(height: 12),
@@ -124,9 +124,9 @@ class _AdvisoryListScreenState extends State<AdvisoryListScreen> {
                       ),
                     )
                   : _advisories.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Padding(
-                            padding: EdgeInsets.all(24),
+                            padding: const EdgeInsets.all(24),
                             child: Text(
                               'No advisories published yet.\nAdd rows to the farming_advisories table.',
                               textAlign: TextAlign.center,
@@ -158,7 +158,7 @@ class _AdvisoryListScreenState extends State<AdvisoryListScreen> {
                                             titleOf(a),
                                             maxLines: 2,
                                             overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 14.5,
                                               fontWeight: FontWeight.w800,
                                               color: FarmoraColors.ink,
@@ -166,7 +166,7 @@ class _AdvisoryListScreenState extends State<AdvisoryListScreen> {
                                           ),
                                         ),
                                         const SizedBox(width: 8),
-                                        const Icon(Icons.chevron_right,
+                                        Icon(Icons.chevron_right,
                                             size: 16,
                                             color: FarmoraColors.inkFaint),
                                       ],
@@ -182,8 +182,7 @@ class _AdvisoryListScreenState extends State<AdvisoryListScreen> {
                                               const Icon(Icons.label_outline,
                                                   size: 10),
                                               const SizedBox(width: 4),
-                                              Text(
-                                                  categoryOf(a).toUpperCase()),
+                                              Text(categoryOf(a).toUpperCase()),
                                             ],
                                           ),
                                         ),
@@ -213,7 +212,7 @@ class _AdvisoryListScreenState extends State<AdvisoryListScreen> {
                                         situation,
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 12.5,
                                           color: FarmoraColors.inkSoft,
                                           height: 1.45,

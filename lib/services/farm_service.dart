@@ -1,4 +1,4 @@
-﻿import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'supabase_client.dart';
 
 /// Immutable snapshot of the signed-in user's profile, combining Supabase
@@ -32,8 +32,10 @@ class UserProfile {
 
   /// Two-letter avatar initials derived from [displayName].
   String get initials {
-    final parts =
-        displayName.replaceAll(RegExp(r'[^A-Za-z ]'), '').trim().split(RegExp(r'\s+'));
+    final parts = displayName
+        .replaceAll(RegExp(r'[^A-Za-z ]'), '')
+        .trim()
+        .split(RegExp(r'\s+'));
     if (parts.isEmpty || parts.first.isEmpty) return '?';
     if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
     return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
@@ -48,10 +50,12 @@ class UserProfile {
     return UserProfile(
       userId: userId,
       email: email,
-      fullName: (fullName != null && fullName.isNotEmpty) ? fullName : this.fullName,
+      fullName:
+          (fullName != null && fullName.isNotEmpty) ? fullName : this.fullName,
       role: (role != null && role.isNotEmpty) ? role : this.role,
       phone: (phone != null && phone.isNotEmpty) ? phone : this.phone,
-      location: (location != null && location.isNotEmpty) ? location : this.location,
+      location:
+          (location != null && location.isNotEmpty) ? location : this.location,
       emailConfirmed: emailConfirmed,
     );
   }
@@ -59,11 +63,10 @@ class UserProfile {
 
 class FarmService {
   // ── Helpers ─────────────────────────────────────────────────────────────
-  
+
   static bool _isValidUUID(String value) {
     final uuidRegex = RegExp(
-      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
-    );
+        r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
     return uuidRegex.hasMatch(value);
   }
   // ─── Farms ───────────────────────────────────────────────────────────────
@@ -86,10 +89,8 @@ class FarmService {
   /// Returns unique farms from telemetry data (for UUID-based operations like feeding logs)
   static Future<List<Map<String, dynamic>>> fetchTelemetryFarms() async {
     try {
-      final data = await supabase
-          .from('sensor_telemetry')
-          .select('farm_id');
-      
+      final data = await supabase.from('sensor_telemetry').select('farm_id');
+
       // Extract unique farm_ids
       final uniqueFarmIds = <String>{};
       for (final row in data) {
@@ -98,7 +99,7 @@ class FarmService {
           uniqueFarmIds.add(farmId);
         }
       }
-      
+
       // Return as list of maps with farm_id
       final result = uniqueFarmIds.map((id) => {'farm_id': id}).toList();
       print('DEBUG: fetchTelemetryFarms data = $result');
@@ -118,17 +119,18 @@ class FarmService {
     try {
       // Skip query if farmId is not a valid UUID (e.g., integer from farms table)
       if (!_isValidUUID(farmId)) {
-        print('DEBUG: fetchLatestTelemetry skipped - farmId is not a valid UUID: $farmId');
+        print(
+            'DEBUG: fetchLatestTelemetry skipped - farmId is not a valid UUID: $farmId');
         return null;
       }
-      
+
       final data = await supabase
           .from('sensor_telemetry')
           .select()
           .eq('farm_id', farmId)
           .order('recorded_at', ascending: false)
           .limit(1);
-      
+
       print('DEBUG: fetchLatestTelemetry data = $data');
       final list = List<Map<String, dynamic>>.from(data as List);
       return list.isEmpty ? null : list.first;
@@ -139,14 +141,15 @@ class FarmService {
   }
 
   /// Returns the last [limit] telemetry rows for [farmId], newest first.
-  static Future<List<Map<String, dynamic>>> fetchTelemetryHistory(
-      String farmId, {int limit = 20}) async {
+  static Future<List<Map<String, dynamic>>> fetchTelemetryHistory(String farmId,
+      {int limit = 20}) async {
     // Skip query if farmId is not a valid UUID (e.g., integer from farms table)
     if (!_isValidUUID(farmId)) {
-      print('DEBUG: fetchTelemetryHistory skipped - farmId is not a valid UUID: $farmId');
+      print(
+          'DEBUG: fetchTelemetryHistory skipped - farmId is not a valid UUID: $farmId');
       return [];
     }
-    
+
     final data = await supabase
         .from('sensor_telemetry')
         .select()
@@ -159,15 +162,16 @@ class FarmService {
   // ─── Alerts ──────────────────────────────────────────────────────────────
 
   /// Returns the most recent alerts for [farmId], newest first.
-  static Future<List<Map<String, dynamic>>> fetchRecentAlerts(
-      String farmId, {int limit = 10}) async {
+  static Future<List<Map<String, dynamic>>> fetchRecentAlerts(String farmId,
+      {int limit = 10}) async {
     // Alerts table uses integer farm_id, so convert string to int
     final farmIdInt = int.tryParse(farmId);
     if (farmIdInt == null) {
-      print('DEBUG: fetchRecentAlerts skipped - farmId is not a valid integer: $farmId');
+      print(
+          'DEBUG: fetchRecentAlerts skipped - farmId is not a valid integer: $farmId');
       return [];
     }
-    
+
     final data = await supabase
         .from('alerts')
         .select()
@@ -234,11 +238,12 @@ class FarmService {
   }
 
   /// Returns recent feeding-log rows for [farmId], newest first.
-  static Future<List<Map<String, dynamic>>> fetchFeedingLogs(
-      String farmId, {int limit = 50}) async {
+  static Future<List<Map<String, dynamic>>> fetchFeedingLogs(String farmId,
+      {int limit = 50}) async {
     // Skip query if farmId is not a valid UUID (e.g., integer from farms table)
     if (!_isValidUUID(farmId)) {
-      print('DEBUG: fetchFeedingLogs skipped - farmId is not a valid UUID: $farmId');
+      print(
+          'DEBUG: fetchFeedingLogs skipped - farmId is not a valid UUID: $farmId');
       return [];
     }
 
@@ -288,11 +293,12 @@ class FarmService {
   }
 
   /// Fetch recent reports for a farm
-  static Future<List<Map<String, dynamic>>> fetchReports(
-      String farmId, {int limit = 50}) async {
+  static Future<List<Map<String, dynamic>>> fetchReports(String farmId,
+      {int limit = 50}) async {
     // Skip query if farmId is not a valid UUID
     if (!_isValidUUID(farmId)) {
-      print('DEBUG: fetchReports skipped - farmId is not a valid UUID: $farmId');
+      print(
+          'DEBUG: fetchReports skipped - farmId is not a valid UUID: $farmId');
       return [];
     }
 

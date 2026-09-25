@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_text_field.dart';
@@ -35,7 +35,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       if (_tab == 'signin') {
-        await supabase.auth.signInWithPassword(email: _email, password: _password);
+        await supabase.auth
+            .signInWithPassword(email: _email, password: _password);
       } else {
         await supabase.auth.signUp(email: _email, password: _password);
       }
@@ -58,14 +59,14 @@ class _LoginScreenState extends State<LoginScreen> {
         Expanded(
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 28),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [FarmoraColors.brand, Color(0xFF24483E)],
+                colors: [FarmoraColors.heroTop, FarmoraColors.heroBottom],
               ),
             ),
-            child: const Column(
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -74,16 +75,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(
                     fontSize: 30,
                     fontWeight: FontWeight.w800,
-                    color: Colors.white,
+                    color: FarmoraColors.onHero,
                     letterSpacing: -0.5,
                   ),
                 ),
-                SizedBox(height: 6),
+                const SizedBox(height: 6),
                 Text(
                   'Professional smart-farming management system',
                   style: TextStyle(
                     fontSize: 13.5,
-                    color: Color(0xFFCFE0D6),
+                    color: FarmoraColors.onHeroSoft,
                     height: 1.5,
                   ),
                 ),
@@ -94,9 +95,9 @@ class _LoginScreenState extends State<LoginScreen> {
         Transform.translate(
           offset: const Offset(0, -18),
           child: Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: FarmoraColors.surface,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
             ),
             padding: const EdgeInsets.fromLTRB(22, 22, 22, 28),
             child: Column(
@@ -122,7 +123,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 9),
                             decoration: BoxDecoration(
-                              color: selected ? FarmoraColors.surface : Colors.transparent,
+                              color: selected
+                                  ? FarmoraColors.surface
+                                  : Colors.transparent,
                               borderRadius: BorderRadius.circular(7),
                               boxShadow: selected
                                   ? const [
@@ -140,7 +143,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               style: TextStyle(
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.bold,
-                                color: selected ? FarmoraColors.ink : FarmoraColors.inkFaint,
+                                color: selected
+                                    ? FarmoraColors.ink
+                                    : FarmoraColors.inkFaint,
                               ),
                             ),
                           ),
@@ -150,7 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'Email address',
                   style: TextStyle(
                     fontSize: 11.5,
@@ -165,7 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   onChanged: (val) => _email = val,
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'Account password',
                   style: TextStyle(
                     fontSize: 11.5,
@@ -186,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 12),
                   Text(
                     _errorMsg!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: FarmoraColors.crit,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -195,14 +200,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
                 const SizedBox(height: 12),
                 PrimaryButton(
-                  text: _loading 
-                    ? 'Loading...' 
-                    : (_tab == 'signin' ? 'Sign In' : 'Create Account'),
+                  text: _loading
+                      ? 'Loading...'
+                      : (_tab == 'signin' ? 'Sign In' : 'Create Account'),
                   disabled: _loading,
                   onClick: _submit,
                 ),
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   'Protected by end-to-end encrypted transport and on-device biometric verification.',
                   textAlign: TextAlign.center,
                   style: TextStyle(

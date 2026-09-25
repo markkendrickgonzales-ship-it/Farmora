@@ -80,7 +80,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         children: [
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w600,
               color: FarmoraColors.inkSoft,
@@ -119,7 +119,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _field('Full name', _name, hint: 'e.g. Jordan Rivera'),
-                        _field('Role / title', _role, hint: 'e.g. Senior farm manager'),
+                        _field('Role / title', _role,
+                            hint: 'e.g. Senior farm manager'),
                         _field(
                           'Phone number',
                           _phone,
@@ -140,7 +141,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: Text(
                         'Signed in as ${widget.profile!.email}',
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 11.5, color: FarmoraColors.inkFaint),
                       ),
                     ),
@@ -149,8 +150,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     const SizedBox(height: 12),
                     Text(
                       _error!,
-                      style: const TextStyle(
-                          color: FarmoraColors.crit, fontSize: 12),
+                      style: TextStyle(color: FarmoraColors.crit, fontSize: 12),
                     ),
                   ],
                   const SizedBox(height: 24),

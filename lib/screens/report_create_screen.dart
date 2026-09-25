@@ -26,12 +26,12 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
   String? _error;
   String? _farmId;
   String _farmName = 'Farm';
-  
+
   // Analytics data
   List<Map<String, dynamic>> _telemetryHistory = [];
   List<Map<String, dynamic>> _alerts = [];
   List<Map<String, dynamic>> _feedingLogs = [];
-  
+
   // Aggregated stats
   double _totalFeedKg = 0;
   double _totalWaterL = 0;
@@ -58,7 +58,7 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
     try {
       final farms = await FarmService.fetchFarms();
       if (!mounted) return;
-      
+
       if (farms.isEmpty) {
         setState(() {
           _loading = false;
@@ -66,25 +66,25 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
         });
         return;
       }
-      
+
       _farmId = farms.first['farm_id']?.toString() ?? '';
       _farmName = farms.first['farm_name'] as String? ?? 'Farm';
-      
+
       final results = await Future.wait([
         FarmService.fetchTelemetryHistory(_farmId!, limit: 50),
         FarmService.fetchRecentAlerts(_farmId!, limit: 20),
         FarmService.fetchFeedingLogs(_farmId!, limit: 100),
       ]);
-      
+
       if (!mounted) return;
-      
+
       setState(() {
         _telemetryHistory = results[0];
         _alerts = results[1];
         _feedingLogs = results[2];
         _loading = false;
       });
-      
+
       _calculateStats();
     } catch (e) {
       print('ERROR [Reports]: Failed to load data: $e');
@@ -101,7 +101,7 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
     final usage = FarmService.aggregateTodayUsage(_feedingLogs);
     _totalFeedKg = usage.feedKg;
     _totalWaterL = usage.waterL;
-    
+
     // Calculate average temperature and humidity
     if (_telemetryHistory.isNotEmpty) {
       double tempSum = 0;
@@ -113,9 +113,9 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
       _avgTemp = tempSum / _telemetryHistory.length;
       _avgHumidity = humSum / _telemetryHistory.length;
     }
-    
+
     _alertCount = _alerts.length;
-    
+
     setState(() {});
   }
 
@@ -141,14 +141,15 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
                   ? Center(
                       child: Padding(
                         padding: const EdgeInsets.all(24),
-                        child: Text(_error!, style: const TextStyle(color: FarmoraColors.crit)),
+                        child: Text(_error!,
+                            style: TextStyle(color: FarmoraColors.crit)),
                       ),
                     )
                   : ListView(
                       padding: const EdgeInsets.all(16),
                       children: [
                         // Summary Cards
-                        const Text(
+                        Text(
                           'Today\'s Summary',
                           style: TextStyle(
                             fontSize: 13,
@@ -164,20 +165,23 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
                                 padding: const EdgeInsets.all(14),
                                 child: Column(
                                   children: [
-                                    const Icon(Icons.grain, size: 20, color: FarmoraColors.brand),
+                                    Icon(Icons.grain,
+                                        size: 20, color: FarmoraColors.brand),
                                     const SizedBox(height: 6),
                                     Text(
                                       '${_totalFeedKg.toStringAsFixed(1)} kg',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
                                         color: FarmoraColors.ink,
                                       ),
                                     ),
                                     const SizedBox(height: 2),
-                                    const Text(
+                                    Text(
                                       'Feed Used',
-                                      style: TextStyle(fontSize: 11, color: FarmoraColors.inkSoft),
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          color: FarmoraColors.inkSoft),
                                     ),
                                   ],
                                 ),
@@ -189,20 +193,23 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
                                 padding: const EdgeInsets.all(14),
                                 child: Column(
                                   children: [
-                                    const Icon(Icons.water_drop, size: 20, color: Colors.blue),
+                                    const Icon(Icons.water_drop,
+                                        size: 20, color: Colors.blue),
                                     const SizedBox(height: 6),
                                     Text(
                                       '${_totalWaterL.toStringAsFixed(0)} L',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
                                         color: FarmoraColors.ink,
                                       ),
                                     ),
                                     const SizedBox(height: 2),
-                                    const Text(
+                                    Text(
                                       'Water Used',
-                                      style: TextStyle(fontSize: 11, color: FarmoraColors.inkSoft),
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          color: FarmoraColors.inkSoft),
                                     ),
                                   ],
                                 ),
@@ -218,20 +225,23 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
                                 padding: const EdgeInsets.all(14),
                                 child: Column(
                                   children: [
-                                    const Icon(Icons.thermostat, size: 20, color: Colors.orange),
+                                    const Icon(Icons.thermostat,
+                                        size: 20, color: Colors.orange),
                                     const SizedBox(height: 6),
                                     Text(
                                       '${_avgTemp.toStringAsFixed(1)}°C',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
                                         color: FarmoraColors.ink,
                                       ),
                                     ),
                                     const SizedBox(height: 2),
-                                    const Text(
+                                    Text(
                                       'Avg Temp',
-                                      style: TextStyle(fontSize: 11, color: FarmoraColors.inkSoft),
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          color: FarmoraColors.inkSoft),
                                     ),
                                   ],
                                 ),
@@ -243,20 +253,23 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
                                 padding: const EdgeInsets.all(14),
                                 child: Column(
                                   children: [
-                                    const Icon(Icons.warning, size: 20, color: FarmoraColors.crit),
+                                    Icon(Icons.warning,
+                                        size: 20, color: FarmoraColors.crit),
                                     const SizedBox(height: 6),
                                     Text(
                                       '$_alertCount',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
                                         color: FarmoraColors.ink,
                                       ),
                                     ),
                                     const SizedBox(height: 2),
-                                    const Text(
+                                    Text(
                                       'Active Alerts',
-                                      style: TextStyle(fontSize: 11, color: FarmoraColors.inkSoft),
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          color: FarmoraColors.inkSoft),
                                     ),
                                   ],
                                 ),
@@ -265,9 +278,9 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
                           ],
                         ),
                         const SizedBox(height: 18),
-                        
+
                         // Recent Alerts
-                        const Text(
+                        Text(
                           'Recent Alerts',
                           style: TextStyle(
                             fontSize: 13,
@@ -277,62 +290,66 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
                         ),
                         const SizedBox(height: 9),
                         if (_alerts.isEmpty)
-                          const FarmoraCard(
-                            padding: EdgeInsets.all(14),
+                          FarmoraCard(
+                            padding: const EdgeInsets.all(14),
                             child: Text(
                               'No recent alerts',
-                              style: TextStyle(fontSize: 12, color: FarmoraColors.inkSoft),
+                              style: TextStyle(
+                                  fontSize: 12, color: FarmoraColors.inkSoft),
                             ),
                           )
                         else
                           ..._alerts.take(5).map((alert) {
-                            final severity = alert['severity'] as String? ?? 'warning';
-                            final alertType = alert['alert_type'] as String? ?? 'Alert';
+                            final severity =
+                                alert['severity'] as String? ?? 'warning';
+                            final alertType =
+                                alert['alert_type'] as String? ?? 'Alert';
                             final createdAt = alert['created_at'] as String?;
-                            
+
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 8),
                               child: FarmoraCard(
                                 padding: const EdgeInsets.all(12),
                                 child: Row(
-                                children: [
-                                  StatusBadge(
-                                    level: severity.toLowerCase(),
-                                    child: Text(severity.toUpperCase()),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          alertType,
-                                          style: const TextStyle(
-                                            fontSize: 12.5,
-                                            fontWeight: FontWeight.w600,
-                                            color: FarmoraColors.ink,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          _formatDate(createdAt),
-                                          style: const TextStyle(
-                                            fontSize: 11,
-                                            color: FarmoraColors.inkFaint,
-                                          ),
-                                        ),
-                                      ],
+                                  children: [
+                                    StatusBadge(
+                                      level: severity.toLowerCase(),
+                                      child: Text(severity.toUpperCase()),
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            alertType,
+                                            style: TextStyle(
+                                              fontSize: 12.5,
+                                              fontWeight: FontWeight.w600,
+                                              color: FarmoraColors.ink,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            _formatDate(createdAt),
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: FarmoraColors.inkFaint,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
                             );
                           }),
                         const SizedBox(height: 18),
-                        
+
                         // Environment Trends
-                        const Text(
+                        Text(
                           'Environment Trends',
                           style: TextStyle(
                             fontSize: 13,
@@ -349,31 +366,38 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
                                 label: 'Average Temperature',
                                 value: '${_avgTemp.toStringAsFixed(1)}°C',
                                 trend: _avgTemp > 28 ? 'High' : 'Normal',
-                                color: _avgTemp > 28 ? FarmoraColors.warn : FarmoraColors.good,
+                                color: _avgTemp > 28
+                                    ? FarmoraColors.warn
+                                    : FarmoraColors.good,
                               ),
-                              const Divider(height: 16, color: FarmoraColors.line),
+                              Divider(height: 16, color: FarmoraColors.line),
                               _TrendRow(
                                 label: 'Average Humidity',
                                 value: '${_avgHumidity.toStringAsFixed(1)}%',
                                 trend: _avgHumidity > 70 ? 'High' : 'Normal',
-                                color: _avgHumidity > 70 ? FarmoraColors.warn : FarmoraColors.good,
+                                color: _avgHumidity > 70
+                                    ? FarmoraColors.warn
+                                    : FarmoraColors.good,
                               ),
                             ],
                           ),
                         ),
                         const SizedBox(height: 18),
-                        
+
                         // Data Source Info
                         FarmoraCard(
                           padding: const EdgeInsets.all(12),
                           child: Row(
                             children: [
-                              const Icon(Icons.info_outline, size: 16, color: FarmoraColors.inkSoft),
+                              Icon(Icons.info_outline,
+                                  size: 16, color: FarmoraColors.inkSoft),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   'Data from $_farmName • Last 50 telemetry readings, 20 alerts, 100 feeding logs',
-                                  style: const TextStyle(fontSize: 11, color: FarmoraColors.inkSoft),
+                                  style: TextStyle(
+                                      fontSize: 11,
+                                      color: FarmoraColors.inkSoft),
                                 ),
                               ),
                             ],
@@ -405,10 +429,15 @@ class _TrendRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12.5, color: FarmoraColors.inkSoft)),
+        Text(label,
+            style: TextStyle(fontSize: 12.5, color: FarmoraColors.inkSoft)),
         Row(
           children: [
-            Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: FarmoraColors.ink)),
+            Text(value,
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: FarmoraColors.ink)),
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -418,7 +447,8 @@ class _TrendRow extends StatelessWidget {
               ),
               child: Text(
                 trend,
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color),
+                style: TextStyle(
+                    fontSize: 10, fontWeight: FontWeight.bold, color: color),
               ),
             ),
           ],

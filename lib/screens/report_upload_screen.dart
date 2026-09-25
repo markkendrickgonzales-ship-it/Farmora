@@ -5,7 +5,6 @@ import '../widgets/farmora_card.dart';
 import '../widgets/screen_header.dart';
 import '../widgets/primary_button.dart';
 import '../services/farm_service.dart';
-import '../services/supabase_client.dart';
 
 class ReportUploadScreen extends StatefulWidget {
   final ValueChanged<String> go;
@@ -164,7 +163,8 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
         setState(() => _uploading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to submit report: ${e.toString().replaceAll('Exception: ', '')}'),
+            content: Text(
+                'Failed to submit report: ${e.toString().replaceAll('Exception: ', '')}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -203,22 +203,27 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
                   Container(
                     width: 52,
                     height: 52,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: FarmoraColors.goodSoft,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.check, size: 26, color: FarmoraColors.good),
+                    child:
+                        Icon(Icons.check, size: 26, color: FarmoraColors.good),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
+                  Text(
                     'Report submitted',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: FarmoraColors.ink),
+                    style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: FarmoraColors.ink),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
+                  Text(
                     'Your report has been successfully submitted and attached to today\'s records.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12.5, color: FarmoraColors.inkSoft),
+                    style:
+                        TextStyle(fontSize: 12.5, color: FarmoraColors.inkSoft),
                   ),
                   const SizedBox(height: 20),
                   PrimaryButton(
@@ -248,7 +253,11 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              const Text('Report title', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: FarmoraColors.inkSoft)),
+              Text('Report title',
+                  style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: FarmoraColors.inkSoft)),
               const SizedBox(height: 6),
               Container(
                 decoration: BoxDecoration(
@@ -259,8 +268,8 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
                 padding: const EdgeInsets.all(12),
                 child: TextField(
                   onChanged: (val) => setState(() => _title = val),
-                  style: const TextStyle(fontSize: 13.5, color: FarmoraColors.ink),
-                  decoration: const InputDecoration(
+                  style: TextStyle(fontSize: 13.5, color: FarmoraColors.ink),
+                  decoration: InputDecoration(
                     hintText: 'e.g. Sector B Morning Audit',
                     hintStyle: TextStyle(color: FarmoraColors.inkFaint),
                     border: InputBorder.none,
@@ -270,7 +279,11 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
                 ),
               ),
               const SizedBox(height: 14),
-              const Text('Category', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: FarmoraColors.inkSoft)),
+              Text('Category',
+                  style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: FarmoraColors.inkSoft)),
               const SizedBox(height: 6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -283,7 +296,7 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
                   child: DropdownButton<String>(
                     value: _category,
                     isExpanded: true,
-                    style: const TextStyle(fontSize: 13.5, color: FarmoraColors.ink),
+                    style: TextStyle(fontSize: 13.5, color: FarmoraColors.ink),
                     onChanged: (val) {
                       if (val != null) setState(() => _category = val);
                     },
@@ -294,7 +307,11 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
                 ),
               ),
               const SizedBox(height: 14),
-              const Text('Photo (optional)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: FarmoraColors.inkSoft)),
+              Text('Photo (optional)',
+                  style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: FarmoraColors.inkSoft)),
               const SizedBox(height: 6),
               if (_imagePath != null)
                 Container(
@@ -317,15 +334,18 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.image, size: 32, color: Colors.white),
+                              const Icon(Icons.image,
+                                  size: 32, color: Colors.white),
                               const SizedBox(height: 8),
                               const Text(
                                 'Image selected',
-                                style: TextStyle(color: Colors.white, fontSize: 12),
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 12),
                               ),
                               Text(
                                 _imagePath!.split('/').last,
-                                style: const TextStyle(color: Colors.white70, fontSize: 10),
+                                style: const TextStyle(
+                                    color: Colors.white70, fontSize: 10),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -342,7 +362,8 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
                             shape: BoxShape.circle,
                           ),
                           child: IconButton(
-                            icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                            icon: const Icon(Icons.close,
+                                color: Colors.white, size: 20),
                             onPressed: _removeImage,
                           ),
                         ),
@@ -357,11 +378,14 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
                       child: FarmoraCard(
                         padding: const EdgeInsets.all(12),
                         onTap: _pickImageFromCamera,
-                        child: const Column(
+                        child: Column(
                           children: [
-                            Icon(Icons.camera_alt, size: 24, color: FarmoraColors.brand),
+                            Icon(Icons.camera_alt,
+                                size: 24, color: FarmoraColors.brand),
                             SizedBox(height: 4),
-                            Text('Camera', style: TextStyle(fontSize: 12, color: FarmoraColors.ink)),
+                            Text('Camera',
+                                style: TextStyle(
+                                    fontSize: 12, color: FarmoraColors.ink)),
                           ],
                         ),
                       ),
@@ -371,11 +395,14 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
                       child: FarmoraCard(
                         padding: const EdgeInsets.all(12),
                         onTap: _pickImageFromGallery,
-                        child: const Column(
+                        child: Column(
                           children: [
-                            Icon(Icons.photo_library, size: 24, color: FarmoraColors.brand),
+                            Icon(Icons.photo_library,
+                                size: 24, color: FarmoraColors.brand),
                             SizedBox(height: 4),
-                            Text('Gallery', style: TextStyle(fontSize: 12, color: FarmoraColors.ink)),
+                            Text('Gallery',
+                                style: TextStyle(
+                                    fontSize: 12, color: FarmoraColors.ink)),
                           ],
                         ),
                       ),
@@ -383,7 +410,11 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
                   ],
                 ),
               const SizedBox(height: 14),
-              const Text('Observations / notes', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: FarmoraColors.inkSoft)),
+              Text('Observations / notes',
+                  style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: FarmoraColors.inkSoft)),
               const SizedBox(height: 6),
               Container(
                 decoration: BoxDecoration(
@@ -395,9 +426,10 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
                 child: TextField(
                   maxLines: 5,
                   onChanged: (val) => setState(() => _notes = val),
-                  style: const TextStyle(fontSize: 13.5, color: FarmoraColors.ink),
-                  decoration: const InputDecoration(
-                    hintText: 'Describe findings or actions taken in the field...',
+                  style: TextStyle(fontSize: 13.5, color: FarmoraColors.ink),
+                  decoration: InputDecoration(
+                    hintText:
+                        'Describe findings or actions taken in the field...',
                     hintStyle: TextStyle(color: FarmoraColors.inkFaint),
                     border: InputBorder.none,
                     isDense: true,
@@ -409,9 +441,10 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
               FarmoraCard(
                 padding: const EdgeInsets.all(12),
                 border: Border.all(color: Colors.transparent),
-                child: const Text(
+                child: Text(
                   'Automatic metadata\nTimestamp and farm ID will be attached automatically upon upload.',
-                  style: TextStyle(fontSize: 11, color: FarmoraColors.inkSoft, height: 1.6),
+                  style: TextStyle(
+                      fontSize: 11, color: FarmoraColors.inkSoft, height: 1.6),
                 ),
               ),
             ],
@@ -419,7 +452,7 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
         ),
         Container(
           padding: const EdgeInsets.all(16),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             border: Border(top: BorderSide(color: FarmoraColors.line)),
           ),
           child: PrimaryButton(

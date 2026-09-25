@@ -60,13 +60,14 @@ class _HomeScreenState extends State<HomeScreen> {
       ]);
 
       if (!mounted) return;
-      
+
       if (results[0] == null) {
-        print('ERROR [HomeScreen]: fetchLatestTelemetry returned null / empty array []');
+        print(
+            'ERROR [HomeScreen]: fetchLatestTelemetry returned null / empty array []');
       } else {
         print('DEBUG [HomeScreen]: fetchLatestTelemetry succeeded');
       }
-      
+
       if ((results[1] as List).isEmpty) {
         print('ERROR [HomeScreen]: fetchRecentAlerts returned empty array []');
       }
@@ -90,7 +91,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String _temp() {
     final v = _telemetry?['temperature_c'];
     if (v == null) {
-      print('ERROR [HomeScreen]: temperature_c field is null in telemetry data');
+      print(
+          'ERROR [HomeScreen]: temperature_c field is null in telemetry data');
     }
     if (v == null) return '--';
     final numVal = (v as num?)?.toDouble();
@@ -100,7 +102,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String _humidity() {
     final v = _telemetry?['humidity_percent'];
     if (v == null) {
-      print('ERROR [HomeScreen]: humidity_percent field is null in telemetry data');
+      print(
+          'ERROR [HomeScreen]: humidity_percent field is null in telemetry data');
     }
     if (v == null) return '--';
     final numVal = (v as num?)?.toDouble();
@@ -110,7 +113,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String _power() {
     final v = _telemetry?['power_load_kw'];
     if (v == null) {
-      print('ERROR [HomeScreen]: power_load_kw field is null in telemetry data');
+      print(
+          'ERROR [HomeScreen]: power_load_kw field is null in telemetry data');
     }
     if (v == null) return '--';
     final numVal = (v as num?)?.toDouble();
@@ -156,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Container(
           padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: FarmoraColors.surface,
             border: Border(bottom: BorderSide(color: FarmoraColors.line)),
           ),
@@ -171,7 +175,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Text(
                         _farmName,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
                           color: FarmoraColors.ink,
@@ -179,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      const Text(
+                      Text(
                         'Farm overview',
                         style: TextStyle(
                           fontSize: 13,
@@ -217,14 +221,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Padding(
                         padding: const EdgeInsets.all(24),
                         child: Text(_error!,
-                            style: const TextStyle(color: FarmoraColors.crit)),
+                            style: TextStyle(color: FarmoraColors.crit)),
                       ),
                     )
                   : ListView(
                       padding: const EdgeInsets.all(16),
                       children: [
                         // Live Telemetry
-                        const Text(
+                        Text(
                           'Live telemetry',
                           style: TextStyle(
                             fontSize: 13,
@@ -273,7 +277,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 18),
 
                         // Uploads Section
-                        const Text(
+                        Text(
                           'Uploads',
                           style: TextStyle(
                             fontSize: 13,
@@ -310,7 +314,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 18),
 
                         // Active Alerts
-                        const Text(
+                        Text(
                           'Active alerts',
                           style: TextStyle(
                             fontSize: 13,
@@ -326,13 +330,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                 message:
                                     '${_alerts.length} alert${_alerts.length > 1 ? "s" : ""} require review.'),
                           ..._alerts.map((a) {
-                            final sev =
-                                (a['severity'] as String? ?? 'warning');
-                            final time = _formatAlertTime(
-                                a['created_at'] as String?);
+                            final sev = (a['severity'] as String? ?? 'warning');
+                            final time =
+                                _formatAlertTime(a['created_at'] as String?);
                             final type =
                                 (a['alert_type'] as String? ?? 'Alert');
-                            print('DEBUG [HomeScreen]: Rendering alert - severity: $sev, type: $type, time: $time');
+                            print(
+                                'DEBUG [HomeScreen]: Rendering alert - severity: $sev, type: $type, time: $time');
                             return Padding(
                               padding: const EdgeInsets.only(top: 8),
                               child: _AlertCard(
@@ -365,7 +369,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 18),
 
                         // Actuators
-                        const Text(
+                        Text(
                           'Environment actuators',
                           style: TextStyle(
                             fontSize: 13,
@@ -381,10 +385,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               _ActuatorRow(
                                 name: 'Ventilation',
                                 on: _vent,
-                                onChange: (val) =>
-                                    setState(() => _vent = val),
+                                onChange: (val) => setState(() => _vent = val),
                               ),
-                              const Divider(
+                              Divider(
                                   height: 1,
                                   color: FarmoraColors.line,
                                   indent: 12,
@@ -395,7 +398,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 onChange: (val) =>
                                     setState(() => _irrigation = val),
                               ),
-                              const Divider(
+                              Divider(
                                   height: 1,
                                   color: FarmoraColors.line,
                                   indent: 12,
@@ -403,8 +406,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               _ActuatorRow(
                                 name: 'Lighting',
                                 on: _light,
-                                onChange: (val) =>
-                                    setState(() => _light = val),
+                                onChange: (val) => setState(() => _light = val),
                               ),
                             ],
                           ),
@@ -412,7 +414,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 18),
 
                         // Recent telemetry log preview
-                        const Text(
+                        Text(
                           'Recent readings',
                           style: TextStyle(
                             fontSize: 13,
@@ -430,10 +432,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   text:
                                       'Temp ${_temp()} \u00b0C | Humidity ${_humidity()}%',
                                   time: _formatAlertTime(
-                                      _telemetry!['recorded_at']
-                                          as String?),
+                                      _telemetry!['recorded_at'] as String?),
                                 ),
-                                const Divider(
+                                Divider(
                                     height: 1,
                                     color: FarmoraColors.line,
                                     indent: 12,
@@ -442,8 +443,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   text:
                                       'Ammonia ${_ammonia()} ppm | Power ${_power()} kW',
                                   time: _formatAlertTime(
-                                      _telemetry!['recorded_at']
-                                          as String?),
+                                      _telemetry!['recorded_at'] as String?),
                                 ),
                               ],
                             ),
@@ -484,12 +484,12 @@ class _MetricCard extends StatelessWidget {
           const SizedBox(height: 9),
           Text(
             label,
-            style: const TextStyle(fontSize: 11.5, color: FarmoraColors.inkSoft),
+            style: TextStyle(fontSize: 11.5, color: FarmoraColors.inkSoft),
           ),
           const SizedBox(height: 2),
           RichText(
             text: TextSpan(
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 19,
                 fontWeight: FontWeight.bold,
                 color: FarmoraColors.ink,
@@ -498,7 +498,7 @@ class _MetricCard extends StatelessWidget {
                 TextSpan(text: value),
                 TextSpan(
                   text: ' $unit',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: FarmoraColors.inkFaint,
@@ -532,9 +532,9 @@ class _AlertCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         border: Border(
           left: BorderSide(color: borderColor, width: 3),
-          top: const BorderSide(color: FarmoraColors.line),
-          right: const BorderSide(color: FarmoraColors.line),
-          bottom: const BorderSide(color: FarmoraColors.line),
+          top: BorderSide(color: FarmoraColors.line),
+          right: BorderSide(color: FarmoraColors.line),
+          bottom: BorderSide(color: FarmoraColors.line),
         ),
       ),
       padding: const EdgeInsets.all(12),
@@ -552,7 +552,7 @@ class _AlertCard extends StatelessWidget {
           const SizedBox(height: 3),
           Text(
             message,
-            style: const TextStyle(fontSize: 12.5, color: FarmoraColors.ink),
+            style: TextStyle(fontSize: 12.5, color: FarmoraColors.ink),
           ),
         ],
       ),
@@ -583,7 +583,7 @@ class _ActuatorRow extends StatelessWidget {
             children: [
               Text(
                 name,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: FarmoraColors.ink),
@@ -626,15 +626,15 @@ class _AdvisoryBannerCard extends StatelessWidget {
           Container(
             width: 42,
             height: 42,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: FarmoraColors.brandSoft,
-              borderRadius: BorderRadius.all(Radius.circular(9)),
+              borderRadius: const BorderRadius.all(Radius.circular(9)),
             ),
-            child: const Icon(Icons.lightbulb_outline,
+            child: Icon(Icons.lightbulb_outline,
                 size: 22, color: FarmoraColors.brand),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -646,7 +646,7 @@ class _AdvisoryBannerCard extends StatelessWidget {
                     color: FarmoraColors.ink,
                   ),
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Text(
                   'Step-by-step field playbooks for current situations',
                   style: TextStyle(fontSize: 12, color: FarmoraColors.inkSoft),
@@ -657,12 +657,12 @@ class _AdvisoryBannerCard extends StatelessWidget {
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: FarmoraColors.brand,
-              borderRadius: BorderRadius.all(Radius.circular(7)),
+              borderRadius: const BorderRadius.all(Radius.circular(7)),
             ),
-            child: const Icon(Icons.arrow_forward_rounded,
-                size: 15, color: Colors.white),
+            child: Icon(Icons.arrow_forward_rounded,
+                size: 15, color: FarmoraColors.onBrand),
           ),
         ],
       ),
@@ -692,7 +692,7 @@ class _UploadButton extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: FarmoraColors.ink,
@@ -719,14 +719,14 @@ class _LogRow extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(fontSize: 12.5, color: FarmoraColors.ink),
+              style: TextStyle(fontSize: 12.5, color: FarmoraColors.ink),
               overflow: TextOverflow.ellipsis,
             ),
           ),
           const SizedBox(width: 8),
           Text(
             time,
-            style: const TextStyle(fontSize: 11, color: FarmoraColors.inkFaint),
+            style: TextStyle(fontSize: 11, color: FarmoraColors.inkFaint),
           ),
         ],
       ),

@@ -47,10 +47,10 @@ class CustomTextField extends StatelessWidget {
               onChanged: onChanged,
               obscureText: isPassword && obscureText,
               keyboardType: keyboardType,
-              style: const TextStyle(fontSize: 13.5, color: FarmoraColors.ink),
+              style: TextStyle(fontSize: 13.5, color: FarmoraColors.ink),
               decoration: InputDecoration(
                 hintText: placeholder,
-                hintStyle: const TextStyle(color: FarmoraColors.inkFaint),
+                hintStyle: TextStyle(color: FarmoraColors.inkFaint),
                 border: InputBorder.none,
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(vertical: 8),
@@ -61,7 +61,9 @@ class CustomTextField extends StatelessWidget {
             GestureDetector(
               onTap: onTogglePassword,
               child: Icon(
-                obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                obscureText
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
                 size: 16,
                 color: FarmoraColors.inkFaint,
               ),

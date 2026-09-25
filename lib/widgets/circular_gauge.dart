@@ -35,17 +35,17 @@ class GaugeWidget extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: FarmoraColors.ink,
-                  fontFeatures: [FontFeature.tabularFigures()],
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
               if (sub != null)
                 Text(
                   sub!,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 10,
                     color: FarmoraColors.inkFaint,
                   ),

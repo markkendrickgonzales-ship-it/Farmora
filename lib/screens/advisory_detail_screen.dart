@@ -129,7 +129,7 @@ class AdvisoryDetailScreen extends StatelessWidget {
                   children: [
                     Text(
                       titleOf(advisory),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                         color: FarmoraColors.ink,
@@ -166,13 +166,13 @@ class AdvisoryDetailScreen extends StatelessWidget {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(Icons.info_outline,
+                            Icon(Icons.info_outline,
                                 size: 15, color: FarmoraColors.warn),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 situation,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12.5,
                                   color: FarmoraColors.ink,
                                   height: 1.5,
@@ -184,7 +184,7 @@ class AdvisoryDetailScreen extends StatelessWidget {
                       ),
                     ],
                     const SizedBox(height: 20),
-                    const Text(
+                    Text(
                       'STEP-BY-STEP INSTRUCTIONS',
                       style: TextStyle(
                         fontSize: 10.5,
@@ -195,7 +195,7 @@ class AdvisoryDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     if (steps.isEmpty)
-                      const Text(
+                      Text(
                         'No detailed instructions are available for this advisory yet.',
                         style: TextStyle(
                             fontSize: 13, color: FarmoraColors.inkSoft),
@@ -211,13 +211,13 @@ class AdvisoryDetailScreen extends StatelessWidget {
                                 width: 26,
                                 height: 26,
                                 alignment: Alignment.center,
-                                decoration: const BoxDecoration(
+                                decoration: BoxDecoration(
                                   color: FarmoraColors.brandSoft,
                                   shape: BoxShape.circle,
                                 ),
                                 child: Text(
                                   '${i + 1}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 12.5,
                                     fontWeight: FontWeight.w800,
                                     color: FarmoraColors.brand,
@@ -237,7 +237,7 @@ class AdvisoryDetailScreen extends StatelessWidget {
                                   ),
                                   child: Text(
                                     steps[i],
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 13,
                                       color: FarmoraColors.ink,
                                       height: 1.55,
@@ -253,7 +253,7 @@ class AdvisoryDetailScreen extends StatelessWidget {
                     // column, when present.
                     if (resourceLink != null) ...[
                       const SizedBox(height: 14),
-                      const Text(
+                      Text(
                         'RESOURCE',
                         style: TextStyle(
                           fontSize: 10.5,
@@ -269,7 +269,7 @@ class AdvisoryDetailScreen extends StatelessWidget {
                           onPressed: () => _launchLink(context, resourceLink),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: FarmoraColors.brand,
-                            side: const BorderSide(color: FarmoraColors.brand),
+                            side: BorderSide(color: FarmoraColors.brand),
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 13),
                             shape: RoundedRectangleBorder(
@@ -294,7 +294,7 @@ class AdvisoryDetailScreen extends StatelessWidget {
                           child: Text(
                             resourceLink,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11.5,
                               color: FarmoraColors.info,
                               decoration: TextDecoration.underline,

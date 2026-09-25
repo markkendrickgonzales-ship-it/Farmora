@@ -43,7 +43,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     final items = _allItems.where((it) {
-      if (_filter == 'Urgent alerts') return it['level'] == 'crit' || it['level'] == 'warn';
+      if (_filter == 'Urgent alerts')
+        return it['level'] == 'crit' || it['level'] == 'warn';
       if (_filter == 'Latest updates') return it['level'] == 'info';
       return true;
     }).toList();
@@ -67,7 +68,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           onBack: () => widget.go('home'),
           right: GestureDetector(
             onTap: () => setState(() => _read = true),
-            child: const Text(
+            child: Text(
               'Mark all read',
               style: TextStyle(
                 fontSize: 11.5,
@@ -111,7 +112,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           child: ListView.separated(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: items.length,
-            separatorBuilder: (_, __) => const Divider(height: 1, color: FarmoraColors.line),
+            separatorBuilder: (_, __) =>
+                Divider(height: 1, color: FarmoraColors.line),
             itemBuilder: (context, index) {
               final it = items[index];
               final barColor = getBarColor(it['level']!);
@@ -144,7 +146,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           const SizedBox(height: 3),
                           Text(
                             it['title']!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
                               color: FarmoraColors.ink,
@@ -153,7 +155,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           const SizedBox(height: 2),
                           Text(
                             it['body']!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
                               color: FarmoraColors.inkSoft,
                             ),

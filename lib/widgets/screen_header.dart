@@ -20,7 +20,7 @@ class ScreenHeader extends StatelessWidget {
     final showBack = onBack != null || Navigator.of(context).canPop();
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: FarmoraColors.surface,
         border: Border(bottom: BorderSide(color: FarmoraColors.line)),
       ),
@@ -40,7 +40,8 @@ class ScreenHeader extends StatelessWidget {
                         Navigator.pop(context);
                       }
                     },
-                    tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                    tooltip:
+                        MaterialLocalizations.of(context).backButtonTooltip,
                     visualDensity: VisualDensity.compact,
                     constraints: const BoxConstraints(),
                     padding: EdgeInsets.zero,
@@ -53,7 +54,7 @@ class ScreenHeader extends StatelessWidget {
                         border: Border.all(color: FarmoraColors.line),
                       ),
                       alignment: Alignment.center,
-                      child: const Icon(
+                      child: Icon(
                         Icons.arrow_back_ios_new,
                         size: 16,
                         color: FarmoraColors.ink,
@@ -68,7 +69,7 @@ class ScreenHeader extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 19,
                           fontWeight: FontWeight.bold,
                           color: FarmoraColors.ink,
@@ -79,7 +80,7 @@ class ScreenHeader extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           subtitle!,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             color: FarmoraColors.inkSoft,
                           ),

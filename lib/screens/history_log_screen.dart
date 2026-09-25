@@ -31,7 +31,10 @@ class _HistoryLogScreenState extends State<HistoryLogScreen> {
       final farms = await FarmService.fetchFarms();
       if (!mounted) return;
       if (farms.isEmpty) {
-        setState(() { _loading = false; _error = 'No farms found.'; });
+        setState(() {
+          _loading = false;
+          _error = 'No farms found.';
+        });
         return;
       }
       final farmId = farms.first['farm_id'] as String;
@@ -50,25 +53,29 @@ class _HistoryLogScreenState extends State<HistoryLogScreen> {
       for (final row in telRows) {
         final ts = DateTime.tryParse(row['recorded_at'] as String? ?? '');
         final temp = (row['temperature_c'] as num?)?.toStringAsFixed(1) ?? '--';
-        final hum  = (row['humidity_percent'] as num?)?.toStringAsFixed(1) ?? '--';
+        final hum =
+            (row['humidity_percent'] as num?)?.toStringAsFixed(1) ?? '--';
         final status = (row['status'] as String? ?? 'ok').toLowerCase();
         entries.add(_LogEntry(
           time: ts,
           title: 'Temp $temp°C · Humidity $hum%',
           value: status == 'ok' ? 'Normal' : status.toUpperCase(),
-          level: status == 'ok' ? 'good' : (status == 'warning' ? 'warn' : 'crit'),
+          level:
+              status == 'ok' ? 'good' : (status == 'warning' ? 'warn' : 'crit'),
         ));
       }
 
       for (final row in alertRows) {
         final ts = DateTime.tryParse(row['triggered_at'] as String? ?? '');
-        final sev  = (row['severity'] as String? ?? 'warning');
+        final sev = (row['severity'] as String? ?? 'warning');
         final type = (row['alert_type'] as String? ?? 'Alert');
         entries.add(_LogEntry(
           time: ts,
           title: type,
           value: sev.toUpperCase(),
-          level: sev.toLowerCase() == 'critical' ? 'crit' : (sev.toLowerCase() == 'warning' ? 'warn' : 'info'),
+          level: sev.toLowerCase() == 'critical'
+              ? 'crit'
+              : (sev.toLowerCase() == 'warning' ? 'warn' : 'info'),
         ));
       }
 
@@ -86,16 +93,23 @@ class _HistoryLogScreenState extends State<HistoryLogScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() { _error = 'Load failed: $e'; _loading = false; });
+      setState(() {
+        _error = 'Load failed: $e';
+        _loading = false;
+      });
     }
   }
 
   Color _levelColor(String level) {
     switch (level) {
-      case 'good': return FarmoraColors.good;
-      case 'warn': return FarmoraColors.warn;
-      case 'crit': return FarmoraColors.crit;
-      default:     return FarmoraColors.info;
+      case 'good':
+        return FarmoraColors.good;
+      case 'warn':
+        return FarmoraColors.warn;
+      case 'crit':
+        return FarmoraColors.crit;
+      default:
+        return FarmoraColors.info;
     }
   }
 
@@ -105,7 +119,20 @@ class _HistoryLogScreenState extends State<HistoryLogScreen> {
     final h = local.hour % 12 == 0 ? 12 : local.hour % 12;
     final m = local.minute.toString().padLeft(2, '0');
     final ap = local.hour < 12 ? 'AM' : 'PM';
-    final months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
     return '${months[local.month - 1]} ${local.day}, $h:$m $ap';
   }
 
@@ -121,15 +148,20 @@ class _HistoryLogScreenState extends State<HistoryLogScreen> {
           child: _loading
               ? const Center(child: CircularProgressIndicator())
               : _error != null
-                  ? Center(child: Padding(
+                  ? Center(
+                      child: Padding(
                       padding: const EdgeInsets.all(24),
-                      child: Text(_error!, style: const TextStyle(color: FarmoraColors.crit)),
+                      child: Text(_error!,
+                          style: TextStyle(color: FarmoraColors.crit)),
                     ))
                   : ListView(
                       padding: const EdgeInsets.all(16),
                       children: [
                         if (_entries.isEmpty)
-                          const BannerWidget(level: 'info', message: 'No history records found for this farm.'),
+                          const BannerWidget(
+                              level: 'info',
+                              message:
+                                  'No history records found for this farm.'),
                         ..._entries.map((e) {
                           final c = _levelColor(e.level);
                           return Padding(
@@ -138,36 +170,48 @@ class _HistoryLogScreenState extends State<HistoryLogScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Container(
-                                  margin: const EdgeInsets.only(top: 4, right: 12),
+                                  margin:
+                                      const EdgeInsets.only(top: 4, right: 12),
                                   width: 9,
                                   height: 9,
-                                  decoration: BoxDecoration(color: c, shape: BoxShape.circle),
+                                  decoration: BoxDecoration(
+                                      color: c, shape: BoxShape.circle),
                                 ),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         _fmtTime(e.time),
-                                        style: const TextStyle(fontSize: 11, color: FarmoraColors.inkFaint),
+                                        style: TextStyle(
+                                            fontSize: 11,
+                                            color: FarmoraColors.inkFaint),
                                       ),
                                       const SizedBox(height: 4),
                                       FarmoraCard(
                                         padding: const EdgeInsets.all(12),
                                         child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
                                           children: [
                                             Expanded(
                                               child: Text(
                                                 e.title,
-                                                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: FarmoraColors.ink),
+                                                style: TextStyle(
+                                                    fontSize: 12.5,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: FarmoraColors.ink),
                                                 overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
                                             const SizedBox(width: 8),
                                             Text(
                                               e.value,
-                                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: c),
+                                              style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: c),
                                             ),
                                           ],
                                         ),
@@ -181,13 +225,14 @@ class _HistoryLogScreenState extends State<HistoryLogScreen> {
                         }),
                         const BannerWidget(
                           level: 'info',
-                          message: 'Showing the most recent telemetry readings and alerts from the database.',
+                          message:
+                              'Showing the most recent telemetry readings and alerts from the database.',
                         ),
                         const SizedBox(height: 16),
                         Center(
                           child: TextButton(
                             onPressed: _loadData,
-                            child: const Text(
+                            child: Text(
                               'Refresh logs',
                               style: TextStyle(
                                 fontSize: 12.5,
@@ -211,5 +256,9 @@ class _LogEntry {
   final String value;
   final String level;
 
-  _LogEntry({this.time, required this.title, required this.value, required this.level});
+  _LogEntry(
+      {this.time,
+      required this.title,
+      required this.value,
+      required this.level});
 }

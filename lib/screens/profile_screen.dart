@@ -25,7 +25,6 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _push = true;
-  bool _contrast = false;
   bool _biometric = true;
 
   UserProfile? _profile;
@@ -94,8 +93,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  String _orDash(String? v) =>
-      (v == null || v.trim().isEmpty) ? 'Not set' : v;
+  String _orDash(String? v) => (v == null || v.trim().isEmpty) ? 'Not set' : v;
 
   Future<void> _changePassword() async {
     final email = _profile?.email;
@@ -141,7 +139,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         Container(
           padding: const EdgeInsets.fromLTRB(18, 22, 18, 18),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: FarmoraColors.surface,
             border: Border(bottom: BorderSide(color: FarmoraColors.line)),
           ),
@@ -150,7 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Container(
                 width: 56,
                 height: 56,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: FarmoraColors.brandSoft,
                   shape: BoxShape.circle,
                 ),
@@ -163,7 +161,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       )
                     : Text(
                         p?.initials ?? '?',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
                           color: FarmoraColors.brand,
@@ -176,14 +174,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      p?.displayName ?? (_loading ? 'Loading…' : 'Farmora user'),
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w800, color: FarmoraColors.ink),
+                      p?.displayName ??
+                          (_loading ? 'Loading…' : 'Farmora user'),
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: FarmoraColors.ink),
                     ),
                     const SizedBox(height: 1),
                     Text(
                       p?.role ?? '—',
-                      style: const TextStyle(fontSize: 12, color: FarmoraColors.inkSoft),
+                      style:
+                          TextStyle(fontSize: 12, color: FarmoraColors.inkSoft),
                     ),
                     const SizedBox(height: 6),
                     StatusBadge(
@@ -210,7 +212,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               IconButton(
                 onPressed: p == null ? null : _openEditProfile,
                 tooltip: 'Edit profile',
-                icon: const Icon(Icons.edit_outlined, size: 20, color: FarmoraColors.brand),
+                icon: Icon(Icons.edit_outlined,
+                    size: 20, color: FarmoraColors.brand),
               ),
             ],
           ),
@@ -223,25 +226,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 title: 'PERSONAL INFORMATION',
                 children: [
                   _ReadonlyRow(label: 'Full name', value: _orDash(p?.fullName)),
-                  const Divider(height: 1, color: FarmoraColors.line),
+                  Divider(height: 1, color: FarmoraColors.line),
                   _ReadonlyRow(
                     label: 'Email address',
                     value: _orDash(p?.email),
                     trailing: (p?.email.isNotEmpty ?? false)
                         ? InkWell(
                             onTap: _copyEmail,
-                            child: const Padding(
-                              padding: EdgeInsets.only(left: 8),
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 8),
                               child: Icon(Icons.copy_all_outlined,
                                   size: 15, color: FarmoraColors.inkFaint),
                             ),
                           )
                         : null,
                   ),
-                  const Divider(height: 1, color: FarmoraColors.line),
+                  Divider(height: 1, color: FarmoraColors.line),
                   _ReadonlyRow(label: 'Phone number', value: _orDash(p?.phone)),
-                  const Divider(height: 1, color: FarmoraColors.line),
-                  _ReadonlyRow(label: 'Operating location', value: _orDash(p?.location)),
+                  Divider(height: 1, color: FarmoraColors.line),
+                  _ReadonlyRow(
+                      label: 'Operating location', value: _orDash(p?.location)),
                 ],
               ),
               const SizedBox(height: 16),
@@ -254,15 +258,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     value: _push,
                     onChanged: (val) => setState(() => _push = val),
                   ),
-                  const Divider(height: 1, color: FarmoraColors.line),
+                  Divider(height: 1, color: FarmoraColors.line),
+                  // Drives the app-wide light/dark palette swap.
                   _ToggleRow(
-                    icon: Icons.remove_red_eye_outlined,
-                    label: 'High contrast mode',
-                    value: _contrast,
-                    onChanged: (val) => setState(() => _contrast = val),
+                    icon: Icons.dark_mode_outlined,
+                    label: 'Dark mode',
+                    value: farmoraTheme.isDark,
+                    onChanged: (val) => farmoraTheme.setDark(val),
                   ),
-                  const Divider(height: 1, color: FarmoraColors.line),
-                  const _ClickRow(icon: Icons.language_outlined, label: 'Language', value: 'English (US)'),
+                  Divider(height: 1, color: FarmoraColors.line),
+                  const _ClickRow(
+                      icon: Icons.language_outlined,
+                      label: 'Language',
+                      value: 'English (US)'),
                 ],
               ),
               const SizedBox(height: 16),
@@ -275,17 +283,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     value: '3 active',
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Connected devices: Mobile App, Web Console, Field Tablet')),
+                        const SnackBar(
+                            content: Text(
+                                'Connected devices: Mobile App, Web Console, Field Tablet')),
                       );
                     },
                   ),
-                  const Divider(height: 1, color: FarmoraColors.line),
+                  Divider(height: 1, color: FarmoraColors.line),
                   _ClickRow(
                     icon: Icons.security_outlined,
                     label: 'Change password',
                     onTap: _changePassword,
                   ),
-                  const Divider(height: 1, color: FarmoraColors.line),
+                  Divider(height: 1, color: FarmoraColors.line),
                   _ToggleRow(
                     icon: Icons.fingerprint,
                     label: 'Biometric login',
@@ -303,14 +313,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     label: 'Help & knowledge base',
                     onTap: () => widget.go('feedback'),
                   ),
-                  const Divider(height: 1, color: FarmoraColors.line),
+                  Divider(height: 1, color: FarmoraColors.line),
                   _ClickRow(
                     icon: Icons.info_outline,
                     label: 'About Farmora',
                     value: 'v2.4.0',
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Farmora Precision Agriculture OS v2.4.0')),
+                        const SnackBar(
+                            content: Text(
+                                'Farmora Precision Agriculture OS v2.4.0')),
                       );
                     },
                   ),
@@ -348,7 +360,7 @@ class _SettingsSection extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 10.5,
             fontWeight: FontWeight.bold,
             color: FarmoraColors.inkFaint,
@@ -379,7 +391,8 @@ class _ReadonlyRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 10.5, color: FarmoraColors.inkFaint)),
+          Text(label,
+              style: TextStyle(fontSize: 10.5, color: FarmoraColors.inkFaint)),
           Flexible(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -389,8 +402,10 @@ class _ReadonlyRow extends StatelessWidget {
                     value,
                     textAlign: TextAlign.end,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontSize: 13, color: FarmoraColors.ink, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: FarmoraColors.ink,
+                        fontWeight: FontWeight.w500),
                   ),
                 ),
                 if (trailing != null) trailing!,
@@ -427,7 +442,8 @@ class _ToggleRow extends StatelessWidget {
             children: [
               Icon(icon, size: 15, color: FarmoraColors.inkSoft),
               const SizedBox(width: 10),
-              Text(label, style: const TextStyle(fontSize: 13, color: FarmoraColors.ink)),
+              Text(label,
+                  style: TextStyle(fontSize: 13, color: FarmoraColors.ink)),
             ],
           ),
           Switch.adaptive(
@@ -467,16 +483,20 @@ class _ClickRow extends StatelessWidget {
               children: [
                 Icon(icon, size: 15, color: FarmoraColors.inkSoft),
                 const SizedBox(width: 10),
-                Text(label, style: const TextStyle(fontSize: 13, color: FarmoraColors.ink)),
+                Text(label,
+                    style: TextStyle(fontSize: 13, color: FarmoraColors.ink)),
               ],
             ),
             Row(
               children: [
                 if (value != null) ...[
-                  Text(value!, style: const TextStyle(fontSize: 12, color: FarmoraColors.inkFaint)),
+                  Text(value!,
+                      style: TextStyle(
+                          fontSize: 12, color: FarmoraColors.inkFaint)),
                   const SizedBox(width: 4),
                 ],
-                const Icon(Icons.chevron_right, size: 14, color: FarmoraColors.inkFaint),
+                Icon(Icons.chevron_right,
+                    size: 14, color: FarmoraColors.inkFaint),
               ],
             ),
           ],

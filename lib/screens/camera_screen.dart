@@ -37,10 +37,11 @@ class _CameraScreenState extends State<CameraScreen> {
 
       if (!status.isGranted) {
         print('ERROR [Camera]: Camera permission denied by user.');
-        setState(() => _cameraError = 'Camera permission denied. Please enable it in settings.');
+        setState(() => _cameraError =
+            'Camera permission denied. Please enable it in settings.');
         return;
       }
-      
+
       // Request storage permission for saving images
       await Permission.storage.request();
 
@@ -58,9 +59,9 @@ class _CameraScreenState extends State<CameraScreen> {
         ResolutionPreset.high,
         enableAudio: false,
       );
-      
+
       await _controller!.initialize();
-      
+
       if (mounted) {
         setState(() {
           _cameraInitialized = true;
@@ -84,9 +85,9 @@ class _CameraScreenState extends State<CameraScreen> {
 
     try {
       setState(() => _capturing = true);
-      
+
       final image = await _controller!.takePicture();
-      
+
       if (mounted) {
         setState(() {
           _capturedImagePath = image.path;
@@ -151,11 +152,11 @@ class _CameraScreenState extends State<CameraScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, color: FarmoraColors.crit, size: 48),
+            Icon(Icons.error_outline, color: FarmoraColors.crit, size: 48),
             const SizedBox(height: 16),
             Text(
               _cameraError!,
-              style: const TextStyle(color: FarmoraColors.crit),
+              style: TextStyle(color: FarmoraColors.crit),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -194,7 +195,7 @@ class _CameraScreenState extends State<CameraScreen> {
         ),
         Container(
           padding: const EdgeInsets.all(16),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: FarmoraColors.surface,
             border: Border(top: BorderSide(color: FarmoraColors.line)),
           ),
@@ -216,7 +217,11 @@ class _CameraScreenState extends State<CameraScreen> {
                     border: Border.all(color: Colors.white, width: 4),
                   ),
                   child: _capturing
-                      ? const Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)))
+                      ? const Center(
+                          child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2)))
                       : null,
                 ),
               ),
@@ -236,14 +241,16 @@ class _CameraScreenState extends State<CameraScreen> {
             color: Colors.black,
             child: Center(
               child: _capturedImagePath != null
-                  ? const Icon(Icons.check_circle, color: Colors.green, size: 64)
-                  : const Icon(Icons.check_circle, color: Colors.green, size: 64),
+                  ? const Icon(Icons.check_circle,
+                      color: Colors.green, size: 64)
+                  : const Icon(Icons.check_circle,
+                      color: Colors.green, size: 64),
             ),
           ),
         ),
         Container(
           padding: const EdgeInsets.all(16),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: FarmoraColors.surface,
             border: Border(top: BorderSide(color: FarmoraColors.line)),
           ),

@@ -40,7 +40,8 @@ class MonitoringHubScreen extends StatelessWidget {
 
     return Column(
       children: [
-        const ScreenHeader(title: 'Monitoring', subtitle: 'Choose a feed to inspect'),
+        const ScreenHeader(
+            title: 'Monitoring', subtitle: 'Choose a feed to inspect'),
         Expanded(
           child: ListView.separated(
             padding: const EdgeInsets.all(16),
@@ -60,7 +61,8 @@ class MonitoringHubScreen extends StatelessWidget {
                         color: FarmoraColors.brandSoft,
                         borderRadius: BorderRadius.circular(9),
                       ),
-                      child: Icon(it['icon'] as IconData, size: 18, color: FarmoraColors.brand),
+                      child: Icon(it['icon'] as IconData,
+                          size: 18, color: FarmoraColors.brand),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -69,7 +71,7 @@ class MonitoringHubScreen extends StatelessWidget {
                         children: [
                           Text(
                             it['title'] as String,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13.5,
                               fontWeight: FontWeight.bold,
                               color: FarmoraColors.ink,
@@ -78,7 +80,7 @@ class MonitoringHubScreen extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             it['desc'] as String,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11.5,
                               color: FarmoraColors.inkSoft,
                             ),
@@ -94,7 +96,8 @@ class MonitoringHubScreen extends StatelessWidget {
                           child: Text(it['tag'] as String),
                         ),
                         const SizedBox(height: 6),
-                        const Icon(Icons.chevron_right, size: 15, color: FarmoraColors.inkFaint),
+                        Icon(Icons.chevron_right,
+                            size: 15, color: FarmoraColors.inkFaint),
                       ],
                     ),
                   ],

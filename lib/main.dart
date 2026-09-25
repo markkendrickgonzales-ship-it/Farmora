@@ -22,6 +22,8 @@ import 'screens/advisory_list_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Restore the persisted light/dark choice before the first frame.
+  await farmoraTheme.load();
   await initSupabase();
   runApp(const FarmoraApp());
 }
@@ -31,11 +33,21 @@ class FarmoraApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Farmora',
-      debugShowCheckedModeBanner: false,
-      theme: FarmoraTheme.themeData,
-      home: const MainShell(),
+    // Watching the theme controller rebuilds the entire tree the instant the
+    // switch flips, so every FarmoraColors getter resolves against the new
+    // palette without an app restart.
+    return ListenableBuilder(
+      listenable: farmoraTheme,
+      builder: (context, _) => MaterialApp(
+        title: 'Farmora',
+        debugShowCheckedModeBanner: false,
+        theme: FarmoraTheme.themeData,
+        darkTheme: FarmoraTheme.darkThemeData,
+        themeMode: farmoraTheme.isDark ? ThemeMode.dark : ThemeMode.light,
+        // Deliberately not `const`: a fresh MainShell instance forces every
+        // screen below it to rebuild and re-read the palette.
+        home: const MainShell(),
+      ),
     );
   }
 }
@@ -136,10 +148,12 @@ class _MainShellState extends State<MainShell> {
         return FarmLogsScreen(
           go: _go,
           needsRefresh: _needsRefreshFarmLogs,
-          onRefreshComplete: () => setState(() => _needsRefreshFarmLogs = false),
+          onRefreshComplete: () =>
+              setState(() => _needsRefreshFarmLogs = false),
         );
       case 'farmLogInput':
-        return FarmLogInputScreen(go: _go, onSubmitted: _triggerFarmLogsRefresh);
+        return FarmLogInputScreen(
+            go: _go, onSubmitted: _triggerFarmLogsRefresh);
       case 'reportUpload':
         return ReportUploadScreen(go: _go, onSubmitted: _triggerReportsRefresh);
       case 'camera':

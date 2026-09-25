@@ -6,7 +6,6 @@ import '../widgets/screen_header.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/primary_button.dart';
 import '../services/farm_service.dart';
-import '../services/supabase_client.dart';
 
 class FarmLogInputScreen extends StatefulWidget {
   final ValueChanged<String> go;
@@ -153,7 +152,8 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
         setState(() => _loading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to submit log: ${e.toString().replaceAll('Exception: ', '')}'),
+            content: Text(
+                'Failed to submit log: ${e.toString().replaceAll('Exception: ', '')}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -193,22 +193,27 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
                   Container(
                     width: 52,
                     height: 52,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: FarmoraColors.goodSoft,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.check, size: 26, color: FarmoraColors.good),
+                    child:
+                        Icon(Icons.check, size: 26, color: FarmoraColors.good),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
+                  Text(
                     'Log submitted',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: FarmoraColors.ink),
+                    style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: FarmoraColors.ink),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     '$_actionType log for $_farmName has been recorded.',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 12.5, color: FarmoraColors.inkSoft),
+                    style:
+                        TextStyle(fontSize: 12.5, color: FarmoraColors.inkSoft),
                   ),
                   const SizedBox(height: 20),
                   PrimaryButton(
@@ -242,11 +247,18 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
                 padding: const EdgeInsets.all(12),
                 child: Text(
                   'Farm: $_farmName',
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: FarmoraColors.ink),
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: FarmoraColors.ink),
                 ),
               ),
               const SizedBox(height: 14),
-              const Text('Action Type', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: FarmoraColors.inkSoft)),
+              Text('Action Type',
+                  style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: FarmoraColors.inkSoft)),
               const SizedBox(height: 6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -259,7 +271,7 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
                   child: DropdownButton<String>(
                     value: _actionType,
                     isExpanded: true,
-                    style: const TextStyle(fontSize: 13.5, color: FarmoraColors.ink),
+                    style: TextStyle(fontSize: 13.5, color: FarmoraColors.ink),
                     onChanged: (val) {
                       if (val != null) {
                         setState(() {
@@ -275,7 +287,11 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
                 ),
               ),
               const SizedBox(height: 14),
-              const Text('Amount', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: FarmoraColors.inkSoft)),
+              Text('Amount',
+                  style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: FarmoraColors.inkSoft)),
               const SizedBox(height: 6),
               CustomTextField(
                 placeholder: 'Enter amount',
@@ -284,7 +300,11 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
                 onChanged: (val) => setState(() => _amount = val),
               ),
               const SizedBox(height: 14),
-              const Text('Unit', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: FarmoraColors.inkSoft)),
+              Text('Unit',
+                  style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: FarmoraColors.inkSoft)),
               const SizedBox(height: 6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -297,7 +317,7 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
                   child: DropdownButton<String>(
                     value: _unit,
                     isExpanded: true,
-                    style: const TextStyle(fontSize: 13.5, color: FarmoraColors.ink),
+                    style: TextStyle(fontSize: 13.5, color: FarmoraColors.ink),
                     onChanged: (val) {
                       if (val != null) setState(() => _unit = val);
                     },
@@ -308,7 +328,11 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
                 ),
               ),
               const SizedBox(height: 14),
-              const Text('Notes (optional)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: FarmoraColors.inkSoft)),
+              Text('Notes (optional)',
+                  style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: FarmoraColors.inkSoft)),
               const SizedBox(height: 6),
               Container(
                 decoration: BoxDecoration(
@@ -320,8 +344,8 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
                 child: TextField(
                   maxLines: 3,
                   onChanged: (val) => setState(() => _notes = val),
-                  style: const TextStyle(fontSize: 13.5, color: FarmoraColors.ink),
-                  decoration: const InputDecoration(
+                  style: TextStyle(fontSize: 13.5, color: FarmoraColors.ink),
+                  decoration: InputDecoration(
                     hintText: 'Add any additional notes...',
                     hintStyle: TextStyle(color: FarmoraColors.inkFaint),
                     border: InputBorder.none,
@@ -331,7 +355,11 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
                 ),
               ),
               const SizedBox(height: 14),
-              const Text('Photo (optional)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: FarmoraColors.inkSoft)),
+              Text('Photo (optional)',
+                  style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: FarmoraColors.inkSoft)),
               const SizedBox(height: 6),
               if (_imagePath != null)
                 Container(
@@ -354,15 +382,18 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.image, size: 32, color: Colors.white),
+                              const Icon(Icons.image,
+                                  size: 32, color: Colors.white),
                               const SizedBox(height: 8),
                               const Text(
                                 'Image selected',
-                                style: TextStyle(color: Colors.white, fontSize: 12),
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 12),
                               ),
                               Text(
                                 _imagePath!.split('/').last,
-                                style: const TextStyle(color: Colors.white70, fontSize: 10),
+                                style: const TextStyle(
+                                    color: Colors.white70, fontSize: 10),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -379,7 +410,8 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
                             shape: BoxShape.circle,
                           ),
                           child: IconButton(
-                            icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                            icon: const Icon(Icons.close,
+                                color: Colors.white, size: 20),
                             onPressed: _removeImage,
                           ),
                         ),
@@ -394,11 +426,14 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
                       child: FarmoraCard(
                         padding: const EdgeInsets.all(12),
                         onTap: _pickImageFromCamera,
-                        child: const Column(
+                        child: Column(
                           children: [
-                            Icon(Icons.camera_alt, size: 24, color: FarmoraColors.brand),
+                            Icon(Icons.camera_alt,
+                                size: 24, color: FarmoraColors.brand),
                             SizedBox(height: 4),
-                            Text('Camera', style: TextStyle(fontSize: 12, color: FarmoraColors.ink)),
+                            Text('Camera',
+                                style: TextStyle(
+                                    fontSize: 12, color: FarmoraColors.ink)),
                           ],
                         ),
                       ),
@@ -408,11 +443,14 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
                       child: FarmoraCard(
                         padding: const EdgeInsets.all(12),
                         onTap: _pickImageFromGallery,
-                        child: const Column(
+                        child: Column(
                           children: [
-                            Icon(Icons.photo_library, size: 24, color: FarmoraColors.brand),
+                            Icon(Icons.photo_library,
+                                size: 24, color: FarmoraColors.brand),
                             SizedBox(height: 4),
-                            Text('Gallery', style: TextStyle(fontSize: 12, color: FarmoraColors.ink)),
+                            Text('Gallery',
+                                style: TextStyle(
+                                    fontSize: 12, color: FarmoraColors.ink)),
                           ],
                         ),
                       ),
@@ -423,7 +461,7 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
               FarmoraCard(
                 padding: const EdgeInsets.all(12),
                 border: Border.all(color: Colors.transparent),
-                child: const Text(
+                child: Text(
                   'Timestamp will be recorded automatically when you submit.',
                   style: TextStyle(fontSize: 11, color: FarmoraColors.inkSoft),
                 ),
@@ -433,7 +471,7 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
         ),
         Container(
           padding: const EdgeInsets.all(16),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             border: Border(top: BorderSide(color: FarmoraColors.line)),
           ),
           child: PrimaryButton(

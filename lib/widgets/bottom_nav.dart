@@ -33,22 +33,33 @@ class BottomNav extends StatelessWidget {
         id: 'monitoringHub',
         label: 'Monitoring',
         icon: Icons.graphic_eq_outlined,
-        group: ['monitoringHub', 'resourceMonitoring', 'envMonitoring', 'historyLog'],
+        group: [
+          'monitoringHub',
+          'resourceMonitoring',
+          'envMonitoring',
+          'historyLog'
+        ],
       ),
-      BottomNavItem(id: 'farmLogs', label: 'Farm Logs', icon: Icons.list_alt_outlined),
-      BottomNavItem(id: 'reportCreate', label: 'Reports', icon: Icons.assignment_outlined),
-      BottomNavItem(id: 'profile', label: 'Profile', icon: Icons.person_outline),
+      BottomNavItem(
+          id: 'farmLogs', label: 'Farm Logs', icon: Icons.list_alt_outlined),
+      BottomNavItem(
+          id: 'reportCreate',
+          label: 'Reports',
+          icon: Icons.assignment_outlined),
+      BottomNavItem(
+          id: 'profile', label: 'Profile', icon: Icons.person_outline),
     ];
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: FarmoraColors.surface,
         border: Border(top: BorderSide(color: FarmoraColors.line)),
       ),
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
       child: Row(
         children: items.map((it) {
-          final active = it.group != null ? it.group!.contains(screen) : screen == it.id;
+          final active =
+              it.group != null ? it.group!.contains(screen) : screen == it.id;
           return Expanded(
             child: InkWell(
               onTap: () => go(it.id),
@@ -60,7 +71,8 @@ class BottomNav extends StatelessWidget {
                     Icon(
                       it.icon,
                       size: 20,
-                      color: active ? FarmoraColors.brand : FarmoraColors.inkFaint,
+                      color:
+                          active ? FarmoraColors.brand : FarmoraColors.inkFaint,
                     ),
                     const SizedBox(height: 3),
                     Text(
@@ -68,7 +80,9 @@ class BottomNav extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: active ? FontWeight.bold : FontWeight.w500,
-                        color: active ? FarmoraColors.brand : FarmoraColors.inkFaint,
+                        color: active
+                            ? FarmoraColors.brand
+                            : FarmoraColors.inkFaint,
                       ),
                     ),
                   ],
