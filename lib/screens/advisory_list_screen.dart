@@ -172,18 +172,40 @@ class _AdvisoryListScreenState extends State<AdvisoryListScreen> {
                                       ],
                                     ),
                                     const SizedBox(height: 8),
-                                    StatusBadge(
-                                      level: 'info',
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(Icons.label_outline,
-                                              size: 10),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                              categoryOf(a).toUpperCase()),
+                                    Row(
+                                      children: [
+                                        StatusBadge(
+                                          level: 'info',
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(Icons.label_outline,
+                                                  size: 10),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                  categoryOf(a).toUpperCase()),
+                                            ],
+                                          ),
+                                        ),
+                                        // Hint that an external guide/video
+                                        // link is included.
+                                        if (AdvisoryDetailScreen.resourceLinkOf(
+                                                a) !=
+                                            null) ...[
+                                          const SizedBox(width: 8),
+                                          const StatusBadge(
+                                            level: 'good',
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(Icons.link, size: 10),
+                                                SizedBox(width: 4),
+                                                Text('LINK'),
+                                              ],
+                                            ),
+                                          ),
                                         ],
-                                      ),
+                                      ],
                                     ),
                                     if (situation.isNotEmpty) ...[
                                       const SizedBox(height: 8),
