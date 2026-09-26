@@ -3,6 +3,39 @@ import 'supabase_client.dart';
 import 'farm_service.dart';
 import 'nutrition_service.dart';
 
+// ── Safe JSON cast helpers ─────────────────────────────────────────────────
+// Supabase (esp. over the web/PostgREST layer) can return an id or numeric
+// column as an `int`, `num` or `String` depending on the underlying column
+// type. Casting those straight to `String?` with `as String?` throws
+// "type 'int' is not a subtype of type 'String?'". Every value read from a
+// response row goes through one of these helpers instead.
+
+/// Reads a value as a String regardless of whether the backend sent text or a
+/// number; returns null for null.
+String? _asStr(dynamic v) => v?.toString();
+
+/// Reads a value as a num, parsing numeric strings; null when absent/invalid.
+num? _asNum(dynamic v) {
+  if (v is num) return v;
+  if (v is String) return num.tryParse(v);
+  return null;
+}
+
+/// Reads a boolean tolerantly (bool, 0/1, "true"/"t").
+bool _asBool(dynamic v) {
+  if (v is bool) return v;
+  if (v is num) return v != 0;
+  if (v is String) return v == 'true' || v == 't' || v == '1';
+  return false;
+}
+
+/// Sends an id back to Postgres with the right type: integers stay integers,
+/// UUIDs / anything else stay strings.
+dynamic _idForPayload(String? id) {
+  if (id == null) return null;
+  return int.tryParse(id) ?? id;
+}
+
 /// A suggested vitamin/additive row from the `vitamin_catalog` table, used to
 /// seed the quick-add chips (name + default dosage/unit) instead of hardcoding
 /// them in the UI.
@@ -25,12 +58,12 @@ class VitaminCatalogItem {
 
   factory VitaminCatalogItem.fromRow(Map<String, dynamic> row) =>
       VitaminCatalogItem(
-        id: row['id'].toString(),
-        name: row['name'] as String? ?? '',
-        defaultDosage: (row['default_dosage'] as num?)?.toDouble(),
-        defaultUnit: row['default_unit'] as String?,
-        purpose: row['purpose'] as String?,
-        isDefault: row['is_default'] as bool? ?? false,
+        id: _asStr(row['id']) ?? '',
+        name: _asStr(row['name']) ?? '',
+        defaultDosage: _asNum(row['default_dosage'])?.toDouble(),
+        defaultUnit: _asStr(row['default_unit']),
+        purpose: _asStr(row['purpose']),
+        isDefault: _asBool(row['is_default']),
       );
 }
 
@@ -60,20 +93,20 @@ class VitaminLogEntry {
   });
 
   factory VitaminLogEntry.fromRow(Map<String, dynamic> row) {
-    final date = DateTime.tryParse(row['log_date'] as String? ?? '') ??
+    final date = DateTime.tryParse(_asStr(row['log_date']) ?? '') ??
         DateTime.now();
     return VitaminLogEntry(
-      id: row['id'].toString(),
-      vitaminId: row['vitamin_id'] as String?,
-      displayName: row['display_name'] as String? ??
-          row['custom_name'] as String? ??
+      id: _asStr(row['id']) ?? '',
+      vitaminId: _asStr(row['vitamin_id']),
+      displayName: _asStr(row['display_name']) ??
+          _asStr(row['custom_name']) ??
           'Vitamin',
-      dosage: (row['dosage'] as num?)?.toDouble() ?? 0,
-      unit: row['unit'] as String? ?? '',
+      dosage: _asNum(row['dosage'])?.toDouble() ?? 0,
+      unit: _asStr(row['unit']) ?? '',
       logDate: DateTime(date.year, date.month, date.day),
-      timeGiven: _parseTime(row['time_given'] as String?),
-      dayNumber: (row['day_number'] as num?)?.toInt() ?? 1,
-      notes: row['notes'] as String?,
+      timeGiven: _parseTime(_asStr(row['time_given'])),
+      dayNumber: _asNum(row['day_number'])?.toInt() ?? 1,
+      notes: _asStr(row['notes']),
     );
   }
 
@@ -184,7 +217,7 @@ class VitaminService extends ChangeNotifier {
       final data = await supabase
           .from('vitamin_logs_view')
           .select()
-          .eq('batch_id', _batchId!)
+          .eq('batch_id', _idForPayload(_batchId))
           .eq('log_date', _todayIso())
           .order('time_given', ascending: false);
       _todayLogs = (data as List)
@@ -212,8 +245,8 @@ class VitaminService extends ChangeNotifier {
     _requireBatch();
     final user = supabase.auth.currentUser;
     final payload = <String, dynamic>{
-      'batch_id': _batchId,
-      'vitamin_id': vitaminId,
+      'batch_id': _idForPayload(_batchId),
+      'vitamin_id': _idForPayload(vitaminId),
       'custom_name': (customName != null && customName.trim().isNotEmpty)
           ? customName.trim()
           : null,
@@ -245,7 +278,7 @@ class VitaminService extends ChangeNotifier {
     String? notes,
   }) async {
     final payload = <String, dynamic>{
-      'vitamin_id': vitaminId,
+      'vitamin_id': _idForPayload(vitaminId),
       'custom_name': (customName != null && customName.trim().isNotEmpty)
           ? customName.trim()
           : null,
@@ -259,7 +292,7 @@ class VitaminService extends ChangeNotifier {
       await supabase
           .from('vitamin_logs')
           .update(payload)
-          .eq('id', id)
+          .eq('id', _idForPayload(id))
           .select()
           .single();
       await _loadTodayLogs();
@@ -271,7 +304,7 @@ class VitaminService extends ChangeNotifier {
 
   Future<void> deleteLog(String id) async {
     try {
-      await supabase.from('vitamin_logs').delete().eq('id', id);
+      await supabase.from('vitamin_logs').delete().eq('id', _idForPayload(id));
       await _loadTodayLogs();
     } catch (e) {
       print('DEBUG: VitaminService.deleteLog error = $e');
@@ -296,7 +329,7 @@ class VitaminService extends ChangeNotifier {
       if (list.isNotEmpty) {
         _batchId = list.first['id']?.toString();
         final start =
-            DateTime.tryParse(list.first['start_date'] as String? ?? '');
+            DateTime.tryParse(_asStr(list.first['start_date']) ?? '');
         if (start != null) {
           final now = DateTime.now();
           final days = DateTime(now.year, now.month, now.day)
