@@ -4,13 +4,14 @@ import '../widgets/farmora_card.dart';
 import '../widgets/status_badge.dart';
 import '../widgets/screen_header.dart';
 import '../services/nutrition_service.dart';
+import '../services/vitamin_service.dart';
 
 /// Nutrition landing screen, nested under Monitoring
 /// (breadcrumb: Monitoring › Nutrition).
 ///
-/// Lists four rows in the same style as the Monitoring hub, then a grouped
-/// "Today's vitamin schedule" card. It listens to [NutritionService] so the
-/// "due today" pill updates live as doses are marked given.
+/// Lists four rows in the same style as the Monitoring hub, then a "Today's
+/// log" preview. It listens to [VitaminService] so the Vitamins pill and the
+/// preview update live as doses are logged.
 class NutritionScreen extends StatefulWidget {
   final ValueChanged<String> go;
 
@@ -25,11 +26,14 @@ class _NutritionScreenState extends State<NutritionScreen> {
   void initState() {
     super.initState();
     NutritionService.instance.addListener(_onChange);
+    VitaminService.instance.addListener(_onChange);
+    VitaminService.instance.ensureLoaded();
   }
 
   @override
   void dispose() {
     NutritionService.instance.removeListener(_onChange);
+    VitaminService.instance.removeListener(_onChange);
     super.dispose();
   }
 
@@ -41,7 +45,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
   Widget build(BuildContext context) {
     final svc = NutritionService.instance;
     final state = svc.state;
-    final due = state.dueTodayCount;
+    final vit = VitaminService.instance;
+    final logged = vit.loggedTodayCount;
 
     return Column(
       children: [
@@ -66,9 +71,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
               _navRow(
                 icon: Icons.medication_liquid_outlined,
                 title: 'Vitamins & additives',
-                desc: 'Given through drinking water',
-                level: due > 0 ? 'warn' : 'good',
-                tag: due > 0 ? '$due due today' : 'All given',
+                desc: 'Log daily doses given through water',
+                level: logged > 0 ? 'good' : 'warn',
+                tag: logged > 0 ? '$logged logged today' : 'None logged today',
                 onTap: () => widget.go('nutritionVitamins'),
               ),
               const SizedBox(height: 10),
@@ -89,7 +94,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
               ),
               const SizedBox(height: 22),
               Text(
-                "Today's vitamin schedule",
+                "Today's log",
                 style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.bold,
@@ -97,7 +102,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              _todayScheduleCard(state.todayDoses),
+              _todayLogCard(vit.todayLogs),
             ],
           ),
         ),
@@ -163,13 +168,25 @@ class _NutritionScreenState extends State<NutritionScreen> {
     );
   }
 
-  Widget _todayScheduleCard(List<VitaminDose> doses) {
-    if (doses.isEmpty) {
+  Widget _todayLogCard(List<VitaminLogEntry> logs) {
+    if (logs.isEmpty) {
       return FarmoraCard(
+        onTap: () => widget.go('nutritionVitamins'),
         padding: const EdgeInsets.all(16),
-        child: Text(
-          'No doses scheduled today.',
-          style: TextStyle(fontSize: 12.5, color: FarmoraColors.inkSoft),
+        child: Row(
+          children: [
+            Icon(Icons.add_circle_outline,
+                size: 18, color: FarmoraColors.brand),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'No vitamins logged yet today — tap to add one',
+                style: TextStyle(fontSize: 12.5, color: FarmoraColors.inkSoft),
+              ),
+            ),
+            Icon(Icons.chevron_right,
+                size: 15, color: FarmoraColors.inkFaint),
+          ],
         ),
       );
     }
@@ -178,44 +195,17 @@ class _NutritionScreenState extends State<NutritionScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
       child: Column(
         children: [
-          for (int i = 0; i < doses.length; i++) ...[
+          for (int i = 0; i < logs.length; i++) ...[
             if (i > 0)
               Divider(height: 1, thickness: 1, color: FarmoraColors.line),
-            _doseRow(doses[i]),
+            _logPreviewRow(logs[i]),
           ],
         ],
       ),
     );
   }
 
-  Widget _doseRow(VitaminDose dose) {
-    final status = dose.effectiveStatus;
-    final Color dotColor;
-    final Color textColor;
-    final FontWeight weight;
-    final String rightLabel;
-
-    switch (status) {
-      case DoseStatus.given:
-        dotColor = FarmoraColors.good;
-        textColor = FarmoraColors.inkSoft;
-        weight = FontWeight.w500;
-        rightLabel = 'Given';
-        break;
-      case DoseStatus.due:
-        dotColor = FarmoraColors.warn;
-        textColor = FarmoraColors.warn;
-        weight = FontWeight.bold;
-        rightLabel = 'Due ${dose.timeLabel}';
-        break;
-      case DoseStatus.scheduled:
-        dotColor = FarmoraColors.inkFaint;
-        textColor = FarmoraColors.inkSoft;
-        weight = FontWeight.w500;
-        rightLabel = 'Scheduled';
-        break;
-    }
-
+  Widget _logPreviewRow(VitaminLogEntry e) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -223,7 +213,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
           Container(
             width: 9,
             height: 9,
-            decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
+            decoration:
+                BoxDecoration(color: FarmoraColors.good, shape: BoxShape.circle),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -231,7 +222,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  dose.name,
+                  e.displayName,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -240,7 +231,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  dose.dosageLine,
+                  e.dosageLabel,
                   style:
                       TextStyle(fontSize: 11.5, color: FarmoraColors.inkSoft),
                 ),
@@ -248,8 +239,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
             ),
           ),
           Text(
-            rightLabel,
-            style: TextStyle(fontSize: 11.5, color: textColor, fontWeight: weight),
+            e.timeLabel,
+            style: TextStyle(fontSize: 11.5, color: FarmoraColors.inkSoft),
           ),
         ],
       ),
