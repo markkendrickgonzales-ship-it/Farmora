@@ -20,6 +20,8 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
   String _title = '';
   String _category = 'General inspection';
   String _notes = '';
+  final TextEditingController _titleCtrl = TextEditingController();
+  final TextEditingController _notesCtrl = TextEditingController();
   bool _submitted = false;
   bool _uploading = false;
   String? _farmId;
@@ -177,9 +179,18 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
       _title = '';
       _category = 'General inspection';
       _notes = '';
+      _titleCtrl.clear();
+      _notesCtrl.clear();
       _imagePath = null;
       _submitted = false;
     });
+  }
+
+  @override
+  void dispose() {
+    _titleCtrl.dispose();
+    _notesCtrl.dispose();
+    super.dispose();
   }
 
   @override
@@ -267,6 +278,7 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
                 ),
                 padding: const EdgeInsets.all(12),
                 child: TextField(
+                  controller: _titleCtrl,
                   onChanged: (val) => setState(() => _title = val),
                   style: TextStyle(fontSize: 13.5, color: FarmoraColors.ink),
                   decoration: InputDecoration(
@@ -424,6 +436,7 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
                 ),
                 padding: const EdgeInsets.all(12),
                 child: TextField(
+                  controller: _notesCtrl,
                   maxLines: 5,
                   onChanged: (val) => setState(() => _notes = val),
                   style: TextStyle(fontSize: 13.5, color: FarmoraColors.ink),

@@ -4,6 +4,8 @@ import '../theme/app_theme.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/primary_button.dart';
 import '../services/supabase_client.dart';
+import '../utils/app_route.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final VoidCallback onEnter;
@@ -15,15 +17,25 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  String _tab = 'signin';
-  String _email = '';
-  String _password = '';
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+
   bool _showPw = false;
   bool _loading = false;
   String? _errorMsg;
 
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
+    super.dispose();
+  }
+
   Future<void> _submit() async {
-    if (_email.isEmpty || _password.isEmpty) {
+    final email = _emailCtrl.text.trim();
+    final password = _passwordCtrl.text;
+
+    if (email.isEmpty || password.isEmpty) {
       setState(() => _errorMsg = 'Please enter email and password.');
       return;
     }
@@ -34,22 +46,22 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      if (_tab == 'signin') {
-        await supabase.auth
-            .signInWithPassword(email: _email, password: _password);
-      } else {
-        await supabase.auth.signUp(email: _email, password: _password);
-      }
-      // Assuming onAuthStateChange in main.dart handles navigation.
-      // But we can also call widget.onEnter() just in case.
-      // widget.onEnter();
+      await supabase.auth.signInWithPassword(email: email, password: password);
+      // Success is handled by MainShell's onAuthStateChange listener, which
+      // swaps the shell to the home screen.
     } on AuthException catch (e) {
-      setState(() => _errorMsg = e.message);
+      if (mounted) setState(() => _errorMsg = e.message);
     } catch (e) {
-      setState(() => _errorMsg = 'Unexpected error: $e');
+      if (mounted) setState(() => _errorMsg = 'Unexpected error: $e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  void _openRegister() {
+    Navigator.of(context).push(
+      SlideFadeRoute(const RegisterScreen()),
+    );
   }
 
   @override
@@ -97,64 +109,31 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Container(
             decoration: BoxDecoration(
               color: FarmoraColors.surface,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(18)),
             ),
             padding: const EdgeInsets.fromLTRB(22, 22, 22, 28),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                    color: FarmoraColors.surfaceSunken,
-                    borderRadius: BorderRadius.circular(9),
-                  ),
-                  child: Row(
-                    children: ['signin', 'register'].map((t) {
-                      final selected = _tab == t;
-                      return Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _tab = t;
-                              _errorMsg = null; // Clear error on tab switch
-                            });
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 9),
-                            decoration: BoxDecoration(
-                              color: selected
-                                  ? FarmoraColors.surface
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(7),
-                              boxShadow: selected
-                                  ? const [
-                                      BoxShadow(
-                                        color: Color.fromRGBO(0, 0, 0, 0.08),
-                                        blurRadius: 2,
-                                        offset: Offset(0, 1),
-                                      )
-                                    ]
-                                  : null,
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              t == 'signin' ? 'SIGN IN' : 'CREATE ACCOUNT',
-                              style: TextStyle(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.bold,
-                                color: selected
-                                    ? FarmoraColors.ink
-                                    : FarmoraColors.inkFaint,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                Text(
+                  'Welcome back',
+                  style: TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.bold,
+                    color: FarmoraColors.ink,
+                    letterSpacing: -0.2,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 4),
+                Text(
+                  'Sign in to manage your flock.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: FarmoraColors.inkSoft,
+                  ),
+                ),
+                const SizedBox(height: 20),
                 Text(
                   'Email address',
                   style: TextStyle(
@@ -166,8 +145,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 6),
                 CustomTextField(
                   placeholder: 'you@farmora.com',
-                  value: _email,
-                  onChanged: (val) => _email = val,
+                  controller: _emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -181,8 +160,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 6),
                 CustomTextField(
                   placeholder: 'Enter password',
-                  value: _password,
-                  onChanged: (val) => _password = val,
+                  controller: _passwordCtrl,
                   isPassword: true,
                   obscureText: !_showPw,
                   onTogglePassword: () => setState(() => _showPw = !_showPw),
@@ -198,15 +176,40 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ],
-                const SizedBox(height: 12),
+                const SizedBox(height: 18),
                 PrimaryButton(
-                  text: _loading
-                      ? 'Loading...'
-                      : (_tab == 'signin' ? 'Sign In' : 'Create Account'),
+                  text: _loading ? 'Loading...' : 'Sign In',
                   disabled: _loading,
-                  onClick: _submit,
+                  onClick: _loading ? () {} : _submit,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 6),
+                Center(
+                  child: TextButton(
+                    onPressed: _loading ? null : _openRegister,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'New to Farmora?',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: FarmoraColors.inkSoft,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Create an account',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.bold,
+                            color: FarmoraColors.brand,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
                 Text(
                   'Protected by end-to-end encrypted transport and on-device biometric verification.',
                   textAlign: TextAlign.center,

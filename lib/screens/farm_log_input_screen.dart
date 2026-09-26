@@ -22,6 +22,7 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
   String _amount = '';
   String _unit = 'kg';
   String _notes = '';
+  final TextEditingController _notesCtrl = TextEditingController();
   bool _loading = false;
   bool _submitted = false;
   String? _farmId;
@@ -167,9 +168,16 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
       _amount = '';
       _unit = 'kg';
       _notes = '';
+      _notesCtrl.clear();
       _imagePath = null;
       _submitted = false;
     });
+  }
+
+  @override
+  void dispose() {
+    _notesCtrl.dispose();
+    super.dispose();
   }
 
   @override
@@ -342,6 +350,7 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
                 ),
                 padding: const EdgeInsets.all(12),
                 child: TextField(
+                  controller: _notesCtrl,
                   maxLines: 3,
                   onChanged: (val) => setState(() => _notes = val),
                   style: TextStyle(fontSize: 13.5, color: FarmoraColors.ink),

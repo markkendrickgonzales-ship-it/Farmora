@@ -48,8 +48,11 @@ class FarmoraApp extends StatelessWidget {
         darkTheme: FarmoraTheme.darkThemeData,
         themeMode: farmoraTheme.isDark ? ThemeMode.dark : ThemeMode.light,
         // Deliberately not `const`: a fresh MainShell instance forces every
-        // screen below it to rebuild and re-read the palette.
-        home: const MainShell(),
+        // screen below it to rebuild and re-read the palette. A `const` here
+        // would canonicalise the subtree so a theme flip would NOT repaint
+        // until some unrelated setState fired in the current screen.
+        // ignore: prefer_const_constructors
+        home: MainShell(),
       ),
     );
   }
