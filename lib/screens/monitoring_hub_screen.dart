@@ -29,6 +29,14 @@ class MonitoringHubScreen extends StatelessWidget {
         'tag': '1 warning',
       },
       {
+        'id': 'nutrition',
+        'title': 'Nutrition monitoring',
+        'desc': 'Feed program & vitamin schedule',
+        'icon': Icons.restaurant_outlined,
+        'level': 'good',
+        'tag': 'On track',
+      },
+      {
         'id': 'historyLog',
         'title': 'Monitoring history',
         'desc': 'Last 7 days of sensor activity',

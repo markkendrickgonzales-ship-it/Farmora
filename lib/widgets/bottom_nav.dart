@@ -37,7 +37,10 @@ class BottomNav extends StatelessWidget {
           'monitoringHub',
           'resourceMonitoring',
           'envMonitoring',
-          'historyLog'
+          'historyLog',
+          'nutrition',
+          'nutritionFeedProgram',
+          'nutritionVitamins',
         ],
       ),
       BottomNavItem(

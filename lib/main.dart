@@ -10,6 +10,9 @@ import 'screens/monitoring_hub_screen.dart';
 import 'screens/resource_monitoring_screen.dart';
 import 'screens/env_monitoring_screen.dart';
 import 'screens/history_log_screen.dart';
+import 'screens/nutrition_screen.dart';
+import 'screens/nutrition_feed_program_screen.dart';
+import 'screens/nutrition_vitamins_screen.dart';
 import 'screens/report_create_screen.dart';
 import 'screens/farm_logs_screen.dart';
 import 'screens/farm_log_input_screen.dart';
@@ -71,6 +74,9 @@ class _MainShellState extends State<MainShell> {
     'resourceMonitoring',
     'envMonitoring',
     'historyLog',
+    'nutrition',
+    'nutritionFeedProgram',
+    'nutritionVitamins',
     'farmLogs',
     'reportCreate',
     'profile',
@@ -138,6 +144,12 @@ class _MainShellState extends State<MainShell> {
         return EnvMonitoringScreen(go: _go);
       case 'historyLog':
         return HistoryLogScreen(go: _go);
+      case 'nutrition':
+        return NutritionScreen(go: _go);
+      case 'nutritionFeedProgram':
+        return NutritionFeedProgramScreen(go: _go);
+      case 'nutritionVitamins':
+        return NutritionVitaminsScreen(go: _go);
       case 'reportCreate':
         return ReportCreateScreen(
           go: _go,
@@ -186,6 +198,9 @@ class _MainShellState extends State<MainShell> {
           'resourceMonitoring': 'monitoringHub',
           'envMonitoring': 'monitoringHub',
           'historyLog': 'monitoringHub',
+          'nutrition': 'monitoringHub',
+          'nutritionFeedProgram': 'nutrition',
+          'nutritionVitamins': 'nutrition',
           'farmLogInput': 'farmLogs',
           'reportUpload': 'reportCreate',
           'camera': 'farmLogs',
