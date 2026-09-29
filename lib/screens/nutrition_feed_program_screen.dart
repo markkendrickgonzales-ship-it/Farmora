@@ -6,50 +6,97 @@ import '../widgets/screen_header.dart';
 import '../services/nutrition_service.dart';
 
 /// Full-screen detail reached from "Feed program", "Guaranteed analysis" and
-/// "Nutrition history". Shows the current phase's guaranteed analysis, all
-/// three phases (past ones marked completed) and a 7-day intake / FCR strip.
-class NutritionFeedProgramScreen extends StatelessWidget {
+/// "Nutrition history". Shows the current phase's guaranteed analysis, every
+/// phase of the active batch's program (past ones marked completed) and a
+/// 7-day intake / FCR strip driven by real `nutrition_logs` readings.
+///
+/// Listens to [NutritionService] so it repaints once the batch program and
+/// history load from Supabase.
+class NutritionFeedProgramScreen extends StatefulWidget {
   final ValueChanged<String> go;
 
   const NutritionFeedProgramScreen({super.key, required this.go});
 
   @override
-  Widget build(BuildContext context) {
-    final state = NutritionService.instance.state;
-    final current = state.currentPhase;
+  State<NutritionFeedProgramScreen> createState() =>
+      _NutritionFeedProgramScreenState();
+}
 
-    // Representative last-7-day intake & FCR readings (in per bird per day, FCR).
-    const intake = [118.0, 124.5, 121.0, 130.2, 133.8, 129.4, 136.1];
-    const fcr = [1.62, 1.65, 1.63, 1.68, 1.70, 1.69, 1.71];
+class _NutritionFeedProgramScreenState extends State<NutritionFeedProgramScreen> {
+  @override
+  void initState() {
+    super.initState();
+    NutritionService.instance.addListener(_onChange);
+    NutritionService.instance.ensureLoaded();
+  }
+
+  @override
+  void dispose() {
+    NutritionService.instance.removeListener(_onChange);
+    super.dispose();
+  }
+
+  void _onChange() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final svc = NutritionService.instance;
+    final state = svc.state;
 
     return Column(
       children: [
         ScreenHeader(
           title: 'Feed program',
-          subtitle: state.phaseLabel,
-          onBack: () => go('nutrition'),
+          subtitle: state?.phaseLabel ??
+              (svc.loading ? 'Loading feed program…' : 'No feed program yet'),
+          onBack: () => widget.go('nutrition'),
         ),
         Expanded(
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              _sectionLabel('Current phase — guaranteed analysis'),
-              const SizedBox(height: 10),
-              _analysisCard(current),
-              const SizedBox(height: 22),
-              _sectionLabel('All phases'),
-              const SizedBox(height: 10),
-              for (final p in state.phases) ...[
-                _phaseRow(p, current.name == p.name),
-                const SizedBox(height: 10),
-              ],
-              const SizedBox(height: 12),
-              _sectionLabel('Intake & FCR — last 7 days'),
-              const SizedBox(height: 10),
-              _historyCard(intake, fcr),
-            ],
+          child: _buildBody(svc, state),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBody(NutritionService svc, BatchNutritionState? state) {
+    if (state == null) {
+      if (svc.loading) {
+        return Center(
+          child: CircularProgressIndicator(color: FarmoraColors.brand),
+        );
+      }
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            svc.error ?? 'No feed program is available for this batch yet.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: FarmoraColors.inkSoft),
           ),
         ),
+      );
+    }
+
+    final current = state.currentPhase;
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _sectionLabel('Current phase — guaranteed analysis'),
+        const SizedBox(height: 10),
+        _analysisCard(current),
+        const SizedBox(height: 22),
+        _sectionLabel('All phases'),
+        const SizedBox(height: 10),
+        for (final p in state.phases) ...[
+          _phaseRow(p, current.name == p.name, state.currentDay),
+          const SizedBox(height: 10),
+        ],
+        const SizedBox(height: 12),
+        _sectionLabel('Intake & FCR — last 7 days'),
+        const SizedBox(height: 10),
+        _historyCard(svc.history),
       ],
     );
   }
@@ -109,10 +156,10 @@ class NutritionFeedProgramScreen extends StatelessWidget {
     );
   }
 
-  Widget _phaseRow(FeedPhase p, bool isCurrent) {
+  Widget _phaseRow(FeedPhase p, bool isCurrent, int currentDay) {
     final String level;
     final String tag;
-    if (p.isPast) {
+    if (p.isPast(currentDay)) {
       level = 'info';
       tag = 'Completed';
     } else if (isCurrent) {
@@ -165,13 +212,30 @@ class NutritionFeedProgramScreen extends StatelessWidget {
     );
   }
 
-  Widget _historyCard(List<double> intake, List<double> fcr) {
-    final now = DateTime.now();
+  Widget _historyCard(List<NutritionReading> history) {
+    if (history.isEmpty) {
+      return FarmoraCard(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(Icons.timeline_outlined, size: 18, color: FarmoraColors.brand),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'No intake readings logged in the last 7 days.',
+                style: TextStyle(fontSize: 12.5, color: FarmoraColors.inkSoft),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return FarmoraCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       child: Column(
         children: [
-          for (int i = 0; i < intake.length; i++) ...[
+          for (int i = 0; i < history.length; i++) ...[
             if (i > 0)
               Divider(height: 1, thickness: 1, color: FarmoraColors.line),
             Padding(
@@ -181,14 +245,14 @@ class NutritionFeedProgramScreen extends StatelessWidget {
                   SizedBox(
                     width: 52,
                     child: Text(
-                      _dayLabel(now, i, intake.length),
+                      _dayLabel(history[i].date),
                       style: TextStyle(
                           fontSize: 11.5, color: FarmoraColors.inkSoft),
                     ),
                   ),
                   Expanded(
                     child: Text(
-                      '${intake[i].toStringAsFixed(0)} g/bird',
+                      '${history[i].intakeG.toStringAsFixed(0)} g/bird',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -197,7 +261,9 @@ class NutritionFeedProgramScreen extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'FCR ${fcr[i].toStringAsFixed(2)}',
+                    history[i].fcr != null
+                        ? 'FCR ${history[i].fcr!.toStringAsFixed(2)}'
+                        : 'FCR —',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -213,9 +279,7 @@ class NutritionFeedProgramScreen extends StatelessWidget {
     );
   }
 
-  String _dayLabel(DateTime now, int i, int len) {
-    final offset = -(len - 1 - i);
-    final d = now.add(Duration(days: offset));
+  String _dayLabel(DateTime d) {
     const wd = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return wd[(d.weekday - 1) % 7];
   }

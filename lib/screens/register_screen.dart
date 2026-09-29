@@ -4,6 +4,7 @@ import '../theme/app_theme.dart';
 import '../widgets/screen_header.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/primary_button.dart';
+import '../widgets/farmora_logo.dart';
 import '../services/supabase_client.dart';
 
 /// Dedicated sign-up screen, pushed as a full-screen route from the Login
@@ -111,6 +112,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const ScreenHeader(
               title: 'Create account',
               subtitle: 'Join Farmora in a few seconds',
+              leading: FarmoraLogo(size: 34),
               // No onBack: ScreenHeader falls back to Navigator.pop, which is
               // correct because this screen is a real pushed route.
             ),

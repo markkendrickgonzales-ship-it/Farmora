@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/primary_button.dart';
+import '../widgets/farmora_logo.dart';
 import '../services/supabase_client.dart';
 import '../utils/app_route.dart';
 import 'register_screen.dart';
@@ -82,6 +83,8 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const FarmoraLogo(size: 76, background: Colors.white),
+                const SizedBox(height: 16),
                 Text(
                   'Farmora',
                   style: TextStyle(

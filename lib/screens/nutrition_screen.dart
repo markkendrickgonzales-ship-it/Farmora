@@ -27,6 +27,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
     super.initState();
     NutritionService.instance.addListener(_onChange);
     VitaminService.instance.addListener(_onChange);
+    NutritionService.instance.ensureLoaded();
     VitaminService.instance.ensureLoaded();
   }
 
@@ -48,6 +49,11 @@ class _NutritionScreenState extends State<NutritionScreen> {
     final vit = VitaminService.instance;
     final logged = vit.loggedTodayCount;
 
+    final feedDesc = state?.phaseLabel ??
+        (svc.loading ? 'Loading feed program\u2026' : 'No feed program yet');
+    final feedTag = state != null ? 'On track' : (svc.loading ? 'Loading' : null);
+    final feedLevel = state != null ? 'good' : 'info';
+
     return Column(
       children: [
         ScreenHeader(
@@ -62,9 +68,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
               _navRow(
                 icon: Icons.restaurant_outlined,
                 title: 'Feed program',
-                desc: state.phaseLabel,
-                level: 'good',
-                tag: 'On track',
+                desc: feedDesc,
+                level: feedLevel,
+                tag: feedTag,
                 onTap: () => widget.go('nutritionFeedProgram'),
               ),
               const SizedBox(height: 10),

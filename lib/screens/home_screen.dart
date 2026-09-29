@@ -5,6 +5,7 @@ import '../widgets/status_badge.dart';
 import '../widgets/banner_widget.dart';
 import '../widgets/primary_button.dart';
 import '../widgets/top_bar.dart';
+import '../widgets/farmora_logo.dart';
 import '../services/farm_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -170,25 +171,31 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  Row(
                     children: [
-                      Text(
-                        _farmName,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: FarmoraColors.ink,
-                          letterSpacing: -0.2,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Farm overview',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: FarmoraColors.inkSoft,
-                        ),
+                      const FarmoraLogo(size: 38),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _farmName,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: FarmoraColors.ink,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Farm overview',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: FarmoraColors.inkSoft,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

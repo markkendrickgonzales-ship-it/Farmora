@@ -23,6 +23,7 @@ import 'screens/notifications_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/feedback_screen.dart';
 import 'screens/advisory_list_screen.dart';
+import 'services/nutrition_service.dart';
 import 'services/vitamin_service.dart';
 
 Future<void> main() async {
@@ -108,6 +109,7 @@ class _MainShellState extends State<MainShell> {
       // signs out, so a fresh login never shows the previous user's records.
       if (newUserId != _loadedUserId) {
         VitaminService.instance.reset();
+        NutritionService.instance.reset();
         _loadedUserId = newUserId;
       }
 
@@ -146,6 +148,7 @@ class _MainShellState extends State<MainShell> {
     // Belt-and-braces: the auth listener also resets, but clear eagerly here
     // so cached data is gone before the sign-out frame paints.
     VitaminService.instance.reset();
+    NutritionService.instance.reset();
     _loadedUserId = null;
   }
 
