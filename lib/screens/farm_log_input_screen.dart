@@ -45,7 +45,7 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
       final telemetryFarms = await FarmService.fetchTelemetryFarms();
       if (telemetryFarms.isNotEmpty) {
         setState(() {
-          _farmId = telemetryFarms.first['farm_id'] as String?;
+          _farmId = telemetryFarms.first['farm_id']?.toString();
           _farmName = 'Telemetry Farm'; // No farm name in telemetry data
         });
       } else {

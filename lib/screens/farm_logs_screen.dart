@@ -62,7 +62,7 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
       });
 
       if (farms.isNotEmpty) {
-        _selectedFarmId = farms.first['farm_id'] as String?;
+        _selectedFarmId = farms.first['farm_id']?.toString();
         _selectedFarmName = 'Telemetry Farm'; // No farm name in telemetry data
         await _loadLogs(_selectedFarmId!);
       } else {
@@ -271,7 +271,7 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
                                       },
                                       items: _farms.map((farm) {
                                         final farmId =
-                                            farm['farm_id'] as String?;
+                                            farm['farm_id']?.toString();
                                         return DropdownMenuItem(
                                           value: farmId,
                                           child: Text(

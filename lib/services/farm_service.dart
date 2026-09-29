@@ -91,11 +91,11 @@ class FarmService {
     try {
       final data = await supabase.from('sensor_telemetry').select('farm_id');
 
-      // Extract unique farm_ids
+      // Extract unique farm_ids (column may arrive as int or String).
       final uniqueFarmIds = <String>{};
       for (final row in data) {
-        final farmId = row['farm_id'] as String?;
-        if (farmId != null) {
+        final farmId = row['farm_id']?.toString();
+        if (farmId != null && farmId.isNotEmpty) {
           uniqueFarmIds.add(farmId);
         }
       }
@@ -176,6 +176,19 @@ class FarmService {
         .from('alerts')
         .select()
         .eq('farm_id', farmIdInt)
+        .order('created_at', ascending: false)
+        .limit(limit);
+    return List<Map<String, dynamic>>.from(data as List);
+  }
+
+  /// Returns the most recent alerts across **all** farms, newest first.
+  /// Used when the caller only holds the telemetry UUID farm id (the
+  /// `alerts` table is keyed by the integer farm id).
+  static Future<List<Map<String, dynamic>>> fetchRecentAlertsAnyFarm(
+      {int limit = 10}) async {
+    final data = await supabase
+        .from('alerts')
+        .select()
         .order('created_at', ascending: false)
         .limit(limit);
     return List<Map<String, dynamic>>.from(data as List);

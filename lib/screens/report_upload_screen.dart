@@ -49,7 +49,7 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
       final telemetryFarms = await FarmService.fetchTelemetryFarms();
       if (telemetryFarms.isNotEmpty) {
         setState(() {
-          _farmId = telemetryFarms.first['farm_id'] as String?;
+          _farmId = telemetryFarms.first['farm_id']?.toString();
           _farmName = 'Telemetry Farm'; // No farm name in telemetry data
         });
       } else {
