@@ -40,7 +40,10 @@ class FarmoraLogo extends StatelessWidget {
       height: size,
       fit: BoxFit.contain,
       cacheWidth: cacheWidth,
-      errorBuilder: (context, error, stackTrace) => _fallback,
+      errorBuilder: (context, error, stackTrace) {
+        debugPrint('FarmoraLogo FAILED to load "$asset": $error');
+        return _fallback;
+      },
     );
     if (radius != null) {
       logo = ClipRRect(
@@ -62,7 +65,9 @@ class FarmoraLogo extends StatelessWidget {
     return logo;
   }
 
-  /// Visible stand-in shown when the PNG fails to load/decode.
+  /// Visible stand-in shown when the PNG fails to load/decode (a missing
+  /// asset or a stale bundle). Kept as a branded badge so the slot is never
+  /// blank; the real reason is logged to the console by the errorBuilder.
   Widget get _fallback => Container(
         width: size,
         height: size,
