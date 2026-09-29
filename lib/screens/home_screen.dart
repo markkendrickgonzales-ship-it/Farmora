@@ -173,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Row(
                     children: [
-                      const FarmoraLogo(size: 38),
+                      const FarmoraLogo(size: 38, radius: 8),
                       const SizedBox(width: 12),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

@@ -83,7 +83,11 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const FarmoraLogo(size: 76, background: Colors.white),
+                const FarmoraLogo(
+                  asset: 'assets/images/logo_login.png',
+                  size: 90,
+                  radius: 18,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'Farmora',

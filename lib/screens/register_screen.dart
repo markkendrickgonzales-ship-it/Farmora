@@ -112,7 +112,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const ScreenHeader(
               title: 'Create account',
               subtitle: 'Join Farmora in a few seconds',
-              leading: FarmoraLogo(size: 34),
+              leading: FarmoraLogo(size: 34, radius: 6),
               // No onBack: ScreenHeader falls back to Navigator.pop, which is
               // correct because this screen is a real pushed route.
             ),

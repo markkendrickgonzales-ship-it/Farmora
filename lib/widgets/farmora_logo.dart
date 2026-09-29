@@ -1,44 +1,65 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
-/// The Farmora brand mark, rendered from `assets/images/logo.png`.
+/// The Farmora brand mark, rendered from a PNG under `assets/images/`.
 ///
-/// Used at three scales across the app: the dashboard header, the login hero
-/// and the register header. Keeps aspect ratio, and if the asset can't be
-/// decoded it falls back to a visible brand badge (rather than an invisible gap)
-/// so a packaging problem is obvious instead of silently blank.
+/// A single widget backs every branded spot so the logo stays consistent:
+///   * [asset] `logo_login.png` on the login hero,
+///   * `logo_app.png` on the dashboard header and the register screen.
+///
+/// The source logos are rectangular with their own solid background, so the
+/// image is fit with [BoxFit.contain] inside a square box and can optionally
+/// get rounded corners ([radius]). If the asset can't be decoded it falls back
+/// to a visible brand badge instead of an invisible gap.
 class FarmoraLogo extends StatelessWidget {
+  final String asset;
   final double size;
 
-  /// Optional round background behind the mark; transparent when null, which
-  /// suits logos that already carry their own background.
+  /// Optional rounded-corner clip radius; null keeps square corners.
+  final double? radius;
+
+  /// Optional round background behind the mark; null renders the image alone.
   final Color? background;
 
-  const FarmoraLogo({super.key, this.size = 40, this.background});
+  const FarmoraLogo({
+    super.key,
+    this.asset = 'assets/images/logo_app.png',
+    this.size = 40,
+    this.radius,
+    this.background,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // Cap decode memory: the source is 1254x1254 but is shown at <= ~76 logical
+    // Cap decode memory: sources are ~600-900px but are shown at <= ~90 logical
     // px, so decoding a few hundred px keeps the mobile image cache healthy.
     final cacheWidth = (size * 3).round().clamp(64, 512);
-    final logo = Image.asset(
-      'assets/images/logo.png',
+    Widget logo = Image.asset(
+      asset,
       width: size,
       height: size,
       fit: BoxFit.contain,
       cacheWidth: cacheWidth,
       errorBuilder: (context, error, stackTrace) => _fallback,
     );
-    if (background == null) return logo;
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(color: background, shape: BoxShape.circle),
-      child: Padding(
-        padding: EdgeInsets.all(size * 0.12),
+    if (radius != null) {
+      logo = ClipRRect(
+        borderRadius: BorderRadius.circular(radius!),
         child: logo,
-      ),
-    );
+      );
+    }
+    if (background != null) {
+      logo = Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(color: background, shape: BoxShape.circle),
+        child: Padding(
+          padding: EdgeInsets.all(size * 0.12),
+          child: logo,
+        ),
+      );
+    }
+    return logo;
   }
 
   /// Visible stand-in shown when the PNG fails to load/decode.
