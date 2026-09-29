@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'theme/app_theme.dart';
 import 'widgets/bottom_nav.dart';
 import 'services/supabase_client.dart';
@@ -22,6 +23,7 @@ import 'screens/notifications_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/feedback_screen.dart';
 import 'screens/advisory_list_screen.dart';
+import 'services/vitamin_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -71,6 +73,11 @@ class _MainShellState extends State<MainShell> {
   bool _needsRefreshFarmLogs = false;
   bool _needsRefreshReports = false;
 
+  // The id of the user whose data is currently loaded into the process-wide
+  // service singletons. Used to detect a logout or an account switch so the
+  // caches can be cleared and re-fetched for the new user.
+  String? _loadedUserId;
+
   final List<String> _navScreens = const [
     'home',
     'monitoringHub',
@@ -94,18 +101,27 @@ class _MainShellState extends State<MainShell> {
   void _setupAuthListener() {
     supabase.auth.onAuthStateChange.listen((data) {
       final session = data.session;
-      if (mounted) {
-        setState(() {
-          if (session != null) {
-            if (_screen == 'login') {
-              _screen = 'home';
-            }
-          } else {
-            _screen = 'login';
-          }
-          _initialized = true;
-        });
+      final newUserId = session?.user.id;
+      if (!mounted) return;
+
+      // Clear cached per-user data whenever the account changes or the user
+      // signs out, so a fresh login never shows the previous user's records.
+      if (newUserId != _loadedUserId) {
+        VitaminService.instance.reset();
+        _loadedUserId = newUserId;
       }
+
+      setState(() {
+        if (session != null) {
+          // Always land on (or stay on) home for a newly authenticated user.
+          if (_screen == 'login' || data.event == AuthChangeEvent.signedIn) {
+            _screen = 'home';
+          }
+        } else {
+          _screen = 'login';
+        }
+        _initialized = true;
+      });
     });
   }
 
@@ -127,6 +143,10 @@ class _MainShellState extends State<MainShell> {
 
   Future<void> _signOut() async {
     await supabase.auth.signOut();
+    // Belt-and-braces: the auth listener also resets, but clear eagerly here
+    // so cached data is gone before the sign-out frame paints.
+    VitaminService.instance.reset();
+    _loadedUserId = null;
   }
 
   Widget _buildScreen() {

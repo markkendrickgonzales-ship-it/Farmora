@@ -165,6 +165,21 @@ class VitaminService extends ChangeNotifier {
   int get loggedTodayCount => _todayLogs.length;
   int get dayNumber => _dayNumber;
 
+  /// Clears every cached, per-user artefact so the next [ensureLoaded] does a
+  /// fresh fetch for a newly signed-in user. Called on sign-out / account
+  /// switch. The shared catalog is reset too because it is re-fetched cheaply
+  /// and we never want a signed-out user's data lingering in memory.
+  void reset() {
+    _catalog = const [];
+    _todayLogs = const [];
+    _batchId = null;
+    _dayNumber = 1;
+    _loaded = false;
+    _loading = false;
+    _error = null;
+    _notify();
+  }
+
   /// Loads catalog + today's log once. Safe to call from multiple screens;
   /// [force] re-fetches even if already loaded.
   Future<void> ensureLoaded({bool force = false}) async {
@@ -214,12 +229,16 @@ class VitaminService extends ChangeNotifier {
       return;
     }
     try {
-      final data = await supabase
+      var query = supabase
           .from('vitamin_logs_view')
           .select()
           .eq('batch_id', _idForPayload(_batchId))
-          .eq('log_date', _todayIso())
-          .order('time_given', ascending: false);
+          .eq('log_date', _todayIso());
+      // Defence-in-depth on top of the vitamin_logs RLS SELECT policy: only
+      // this user's entries.
+      final userId = supabase.auth.currentUser?.id;
+      if (userId != null) query = query.eq('logged_by', userId);
+      final data = await query.order('time_given', ascending: false);
       _todayLogs = (data as List)
           .map((r) => VitaminLogEntry.fromRow(Map<String, dynamic>.from(r)))
           .toList();
@@ -289,12 +308,14 @@ class VitaminService extends ChangeNotifier {
       'notes': (notes != null && notes.trim().isNotEmpty) ? notes.trim() : null,
     };
     try {
-      await supabase
+      final userId = supabase.auth.currentUser?.id;
+      var query = supabase
           .from('vitamin_logs')
           .update(payload)
-          .eq('id', _idForPayload(id))
-          .select()
-          .single();
+          .eq('id', _idForPayload(id));
+      // Never edit another user's row even if an id leaked (RLS also blocks).
+      if (userId != null) query = query.eq('logged_by', userId);
+      await query.select().single();
       await _loadTodayLogs();
     } catch (e) {
       print('DEBUG: VitaminService.updateLog error = $e');
@@ -304,7 +325,11 @@ class VitaminService extends ChangeNotifier {
 
   Future<void> deleteLog(String id) async {
     try {
-      await supabase.from('vitamin_logs').delete().eq('id', _idForPayload(id));
+      final userId = supabase.auth.currentUser?.id;
+      var query =
+          supabase.from('vitamin_logs').delete().eq('id', _idForPayload(id));
+      if (userId != null) query = query.eq('logged_by', userId);
+      await query;
       await _loadTodayLogs();
     } catch (e) {
       print('DEBUG: VitaminService.deleteLog error = $e');
@@ -320,11 +345,16 @@ class VitaminService extends ChangeNotifier {
   /// in the current Farmora schema.
   Future<void> _resolveBatchContext() async {
     try {
-      final rows = await supabase
-          .from('batches')
-          .select('id, start_date')
-          .order('start_date', ascending: false)
-          .limit(1);
+      final userId = supabase.auth.currentUser?.id;
+      // Filter (owner) before the transforms (order/limit): PostgREST forbids
+      // filtering once ordering has been applied. The builder is dynamic
+      // because the optional owner filter changes the chain type.
+      dynamic query = supabase.from('batches').select('id, start_date');
+      // Only pick a batch this user owns (batches.owner_id from migration
+      // 0002). If the column is absent the query throws and we fall through
+      // to the telemetry fallback below, exactly as before.
+      if (userId != null) query = query.eq('owner_id', userId);
+      final rows = await query.order('start_date', ascending: false).limit(1);
       final list = List<Map<String, dynamic>>.from(rows as List);
       if (list.isNotEmpty) {
         _batchId = list.first['id']?.toString();

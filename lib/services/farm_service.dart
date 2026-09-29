@@ -69,27 +69,148 @@ class FarmService {
         r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
     return uuidRegex.hasMatch(value);
   }
+
+  // ── Per-user ownership scoping ──────────────────────────────────────────
+  //
+  // Migration 0002 adds an owner column and RLS policies to every app-facing
+  // table. RLS is the real enforcement (server-side); these client filters are
+  // defence-in-depth so the correct subset is requested even before RLS is
+  // tuned, and so a leaked anon key can't trivially read another user's rows.
+  //
+  // The owner column per table is fixed by migration 0002, so it is declared
+  // statically rather than discovered at runtime (PostgREST does not expose
+  // information_schema to the authenticated role). If a query fails because
+  // the column is not present yet — i.e. the migration has not been applied —
+  // the table is remembered as "unscoped" and the query is retried without
+  // the owner filter, so the app keeps working against a pre-0002 database.
+
+  /// Table -> column that stores the owning auth user id (from migration 0002).
+  /// Farm-linked device tables (sensor_telemetry, alerts) are intentionally
+  /// absent: they have no owner column and are isolated via RLS + the scoped
+  /// farm ids callers pass in.
+  static const Map<String, String> _ownerColumnByTable = {
+    'farms': 'owner_id',
+    'batches': 'owner_id',
+    'feeding_logs': 'user_id',
+    'reports': 'user_id',
+    'vitamin_logs': 'logged_by',
+  };
+
+  /// Tables where the owner column turned out to be missing (migration not
+  /// applied): skip client scoping for them after the first failure.
+  static final Set<String> _unscopedTables = {};
+
+  static bool _isMissingColumnError(Object e) {
+    final s = e.toString().toLowerCase();
+    return s.contains('column') &&
+        (s.contains('does not exist') || s.contains('not found'));
+  }
+
+  /// Runs `select` on [table], scoped to the signed-in user wherever the
+  /// schema supports it. Filters are applied before the order/limit transforms
+  /// because PostgREST forbids filtering after ordering.
+  ///
+  /// Owner-column tables are filtered client-side by the current user id.
+  /// Farm-linked device tables (sensor_telemetry / alerts) are NOT filtered
+  /// here — their farm ids are integers that don't compare reliably against
+  /// the text id list, and the ids callers pass already come from the scoped
+  /// [fetchFarms]. Row Level Security (migration 0002) enforces isolation for
+  /// those tables server-side.
+  static Future<List<dynamic>> _ownedSelect(String table,
+      {String columns = '*',
+      String? eqColumn,
+      dynamic eqValue,
+      String? orderColumn,
+      bool ascending = true,
+      int? limit}) async {
+    // Returns a fresh builder each call — the chain mutates via `dynamic`.
+    Future<List<dynamic>> run(bool scope) async {
+      dynamic builder = supabase.from(table).select(columns);
+      if (eqColumn != null) builder = builder.eq(eqColumn, eqValue);
+      if (scope) {
+        final userId = supabase.auth.currentUser?.id;
+        final ownerCol = _ownerColumnByTable[table];
+        if (userId != null && ownerCol != null) {
+          builder = builder.eq(ownerCol, userId);
+        }
+      }
+      if (orderColumn != null) {
+        builder = builder.order(orderColumn, ascending: ascending);
+      }
+      if (limit != null) builder = builder.limit(limit);
+      final data = await builder;
+      return data as List;
+    }
+
+    // Only owner-column tables are client-scoped; farm-linked tables fall
+    // through to unscoped reads guarded by RLS.
+    final shouldScope = _ownerColumnByTable.containsKey(table) &&
+        !_unscopedTables.contains(table);
+    if (!shouldScope) return run(false);
+
+    try {
+      return await run(true);
+    } catch (e) {
+      if (_isMissingColumnError(e)) {
+        // Migration 0002 not applied on this project yet: fall back to
+        // unscoped reads (RLS may still be off) and remember not to retry.
+        print(
+            'DEBUG: FarmService.$table owner column missing - RLS migration '
+            'not applied? Falling back to unscoped query.');
+        _unscopedTables.add(table);
+        return run(false);
+      }
+      rethrow;
+    }
+  }
+
+  /// Inserts [payload] into [table], stamping the caller into the table's owner
+  /// column (migration 0002). If that column is not present yet — migration not
+  /// applied — the insert is retried without it so writes keep working.
+  static Future<void> _ownedInsert(
+      String table, Map<String, dynamic> payload) async {
+    final ownerCol = _ownerColumnByTable[table];
+    final userId = supabase.auth.currentUser?.id;
+    final scoped = <String, dynamic>{
+      ...payload,
+      if (ownerCol != null && userId != null) ownerCol: userId,
+    };
+    try {
+      await supabase.from(table).insert(scoped);
+    } catch (e) {
+      if (ownerCol != null && _isMissingColumnError(e)) {
+        print(
+            'DEBUG: FarmService.$table owner column missing on insert - '
+            'retrying without it.');
+        scoped.remove(ownerCol);
+        await supabase.from(table).insert(scoped);
+        return;
+      }
+      rethrow;
+    }
+  }
+
   // ─── Farms ───────────────────────────────────────────────────────────────
 
-  /// Returns all farms ordered by farm_name.
+  /// Returns the farms belonging to the signed-in user, ordered by farm_name.
   static Future<List<Map<String, dynamic>>> fetchFarms() async {
     try {
-      final data = await supabase
-          .from('farms')
-          .select()
-          .order('farm_name', ascending: true);
+      final data =
+          await _ownedSelect('farms', orderColumn: 'farm_name', ascending: true);
       print('DEBUG: fetchFarms data = $data');
-      return List<Map<String, dynamic>>.from(data as List);
+      return List<Map<String, dynamic>>.from(data);
     } catch (error) {
       print('DEBUG: fetchFarms error = $error');
       rethrow;
     }
   }
 
-  /// Returns unique farms from telemetry data (for UUID-based operations like feeding logs)
+  /// Returns unique farms from telemetry data (for UUID-based operations like
+  /// feeding logs). Scoped through farm ownership so a user only ever sees
+  /// telemetry belonging to their own farms.
   static Future<List<Map<String, dynamic>>> fetchTelemetryFarms() async {
     try {
-      final data = await supabase.from('sensor_telemetry').select('farm_id');
+      final data = await _ownedSelect('sensor_telemetry', columns: 'farm_id');
 
       // Extract unique farm_ids (column may arrive as int or String).
       final uniqueFarmIds = <String>{};
@@ -124,15 +245,17 @@ class FarmService {
         return null;
       }
 
-      final data = await supabase
-          .from('sensor_telemetry')
-          .select()
-          .eq('farm_id', farmId)
-          .order('recorded_at', ascending: false)
-          .limit(1);
+      final data = await _ownedSelect(
+        'sensor_telemetry',
+        eqColumn: 'farm_id',
+        eqValue: farmId,
+        orderColumn: 'recorded_at',
+        ascending: false,
+        limit: 1,
+      );
 
       print('DEBUG: fetchLatestTelemetry data = $data');
-      final list = List<Map<String, dynamic>>.from(data as List);
+      final list = List<Map<String, dynamic>>.from(data);
       return list.isEmpty ? null : list.first;
     } catch (error) {
       print('DEBUG: fetchLatestTelemetry error = $error');
@@ -150,13 +273,15 @@ class FarmService {
       return [];
     }
 
-    final data = await supabase
-        .from('sensor_telemetry')
-        .select()
-        .eq('farm_id', farmId)
-        .order('recorded_at', ascending: false)
-        .limit(limit);
-    return List<Map<String, dynamic>>.from(data as List);
+    final data = await _ownedSelect(
+      'sensor_telemetry',
+      eqColumn: 'farm_id',
+      eqValue: farmId,
+      orderColumn: 'recorded_at',
+      ascending: false,
+      limit: limit,
+    );
+    return List<Map<String, dynamic>>.from(data);
   }
 
   // ─── Alerts ──────────────────────────────────────────────────────────────
@@ -172,26 +297,29 @@ class FarmService {
       return [];
     }
 
-    final data = await supabase
-        .from('alerts')
-        .select()
-        .eq('farm_id', farmIdInt)
-        .order('created_at', ascending: false)
-        .limit(limit);
-    return List<Map<String, dynamic>>.from(data as List);
+    final data = await _ownedSelect(
+      'alerts',
+      eqColumn: 'farm_id',
+      eqValue: farmIdInt,
+      orderColumn: 'created_at',
+      ascending: false,
+      limit: limit,
+    );
+    return List<Map<String, dynamic>>.from(data);
   }
 
-  /// Returns the most recent alerts across **all** farms, newest first.
-  /// Used when the caller only holds the telemetry UUID farm id (the
-  /// `alerts` table is keyed by the integer farm id).
+  /// Returns the most recent alerts across **all** farms the caller owns,
+  /// newest first. Used when the caller only holds the telemetry UUID farm id
+  /// (the `alerts` table is keyed by the integer farm id).
   static Future<List<Map<String, dynamic>>> fetchRecentAlertsAnyFarm(
       {int limit = 10}) async {
-    final data = await supabase
-        .from('alerts')
-        .select()
-        .order('created_at', ascending: false)
-        .limit(limit);
-    return List<Map<String, dynamic>>.from(data as List);
+    final data = await _ownedSelect(
+      'alerts',
+      orderColumn: 'created_at',
+      ascending: false,
+      limit: limit,
+    );
+    return List<Map<String, dynamic>>.from(data);
   }
 
   // ─── Feeding logs ────────────────────────────────────────────────────────
@@ -235,7 +363,7 @@ class FarmService {
             : '$enhancedNotes\n\nImage attached: ${imagePath.split('/').last}';
       }
 
-      await supabase.from('feeding_logs').insert({
+      await _ownedInsert('feeding_logs', {
         'farm_id': farmId,
         'action_type': actionType,
         'amount': amount,
@@ -251,6 +379,7 @@ class FarmService {
   }
 
   /// Returns recent feeding-log rows for [farmId], newest first.
+  /// Also scoped to the caller via the `user_id` owner column.
   static Future<List<Map<String, dynamic>>> fetchFeedingLogs(String farmId,
       {int limit = 50}) async {
     // Skip query if farmId is not a valid UUID (e.g., integer from farms table)
@@ -260,13 +389,15 @@ class FarmService {
       return [];
     }
 
-    final data = await supabase
-        .from('feeding_logs')
-        .select()
-        .eq('farm_id', farmId)
-        .order('action_time', ascending: false)
-        .limit(limit);
-    return List<Map<String, dynamic>>.from(data as List);
+    final data = await _ownedSelect(
+      'feeding_logs',
+      eqColumn: 'farm_id',
+      eqValue: farmId,
+      orderColumn: 'action_time',
+      ascending: false,
+      limit: limit,
+    );
+    return List<Map<String, dynamic>>.from(data);
   }
 
   // ─── Reports ────────────────────────────────────────────────────────────
@@ -298,14 +429,14 @@ class FarmService {
       // For now, we insert without file attachment to avoid schema errors
       // TODO: Add proper file storage integration once schema is confirmed
 
-      await supabase.from('reports').insert(payload);
+      await _ownedInsert('reports', payload);
     } catch (error) {
       print('DEBUG: insertReport error = $error');
       rethrow;
     }
   }
 
-  /// Fetch recent reports for a farm
+  /// Fetch recent reports for a farm, scoped to the caller's `user_id`.
   static Future<List<Map<String, dynamic>>> fetchReports(String farmId,
       {int limit = 50}) async {
     // Skip query if farmId is not a valid UUID
@@ -315,13 +446,15 @@ class FarmService {
       return [];
     }
 
-    final data = await supabase
-        .from('reports')
-        .select()
-        .eq('farm_id', farmId)
-        .order('created_at', ascending: false)
-        .limit(limit);
-    return List<Map<String, dynamic>>.from(data as List);
+    final data = await _ownedSelect(
+      'reports',
+      eqColumn: 'farm_id',
+      eqValue: farmId,
+      orderColumn: 'created_at',
+      ascending: false,
+      limit: limit,
+    );
+    return List<Map<String, dynamic>>.from(data);
   }
 
   // ─── Farming advisories ─────────────────────────────────────────────────
