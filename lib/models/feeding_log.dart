@@ -1,7 +1,5 @@
 import 'json_casts.dart';
 
-/// One feeding / watering entry from the `feeding_logs` table, served by
-/// get_logs.php and written by add_log.php.
 class FeedingLog {
   final int id;
   final int farmId;
@@ -11,7 +9,6 @@ class FeedingLog {
   final String triggerSource;
   final String? notes;
 
-  /// Public URL of the photo uploaded through upload_file.php, if any.
   final String? imageUrl;
   final DateTime actionTime;
 
@@ -51,7 +48,6 @@ class FeedingLog {
         'action_time': actionTime.toIso8601String(),
       };
 
-  /// 'Feeding' rows render 🌾, 'Watering' rows 💧 (same rule as Farm Logs).
   bool get isFeeding => actionType.toLowerCase().contains('feed');
   bool get isWatering => actionType.toLowerCase().contains('water');
 }

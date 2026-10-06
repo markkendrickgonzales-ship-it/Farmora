@@ -48,8 +48,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await AuthService.instance.login(email: email, password: password);
-      // Success is handled by MainShell's AuthService listener, which
-      // swaps the shell to the home screen.
     } on ApiException catch (e) {
       if (mounted) setState(() => _errorMsg = e.message);
     } catch (e) {

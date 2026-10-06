@@ -1,10 +1,5 @@
 <?php
-/**
- * get_logs.php — GET ?farm_id=1&limit=100
- * Feeding / watering logs for one of the caller's farms, newest first.
- * The farm_id is only honoured when the farm actually belongs to the token's
- * user — this owner check is the MySQL stand-in for Supabase's RLS policies.
- */
+
 require_once __DIR__ . '/db_connect.php';
 
 $user   = require_auth();

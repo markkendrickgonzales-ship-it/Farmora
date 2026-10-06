@@ -1,28 +1,15 @@
 <?php
-/**
- * db_connect.php — shared bootstrap for every Farmora API endpoint.
- *
- * Hostinger setup:
- *   1. Create a MySQL database + user in hPanel → MySQL (use them below).
- *   2. Upload this whole folder to public_html/api (or your sub-folder).
- *   3. Import schema.sql via phpMyAdmin.
- *   4. Set FILE_BASE_URL to the public URL of this folder + '/uploads'.
- */
 
-// ── Hostinger MySQL credentials (edit these) ────────────────────────────────
-define('DB_HOST', 'localhost');            // Hostinger is always 'localhost'
-define('DB_NAME', 'u000000000_farmora');   // from hPanel → MySQL
-define('DB_USER', 'u000000000_farmora');   // from hPanel → MySQL
-define('DB_PASS', 'CHANGE_ME');            // the DB user's password
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'u000000000_farmora');
+define('DB_USER', 'u000000000_farmora');
+define('DB_PASS', 'CHANGE_ME');
 define('DB_PORT', 3306);
 
-// Public base used to build download URLs returned by upload_file.php.
 define('FILE_BASE_URL', 'https://yourdomain.com/api/uploads');
 
-// Session token lifetime.
-define('TOKEN_TTL_SECONDS', 60 * 60 * 24 * 30); // 30 days
+define('TOKEN_TTL_SECONDS', 60 * 60 * 24 * 30);
 
-// ── Transport ───────────────────────────────────────────────────────────────
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
@@ -32,7 +19,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
     exit;
 }
 
-/** PDO connection (lazy, shared per request). */
 function db(): PDO
 {
     static $pdo = null;
@@ -51,7 +37,6 @@ function db(): PDO
     return $pdo;
 }
 
-/** The single JSON envelope the Flutter ApiService expects. */
 function json_response(bool $success, $data = null, ?string $message = null, int $status = 200): void
 {
     http_response_code($status);
@@ -59,7 +44,6 @@ function json_response(bool $success, $data = null, ?string $message = null, int
     exit;
 }
 
-/** Decoded JSON request body (empty array when absent). */
 function request_body(): array
 {
     $raw = file_get_contents('php://input');
@@ -67,7 +51,6 @@ function request_body(): array
     return is_array($decoded) ? $decoded : [];
 }
 
-/** Bearer token from the Authorization header. */
 function bearer_token(): ?string
 {
     $header = $_SERVER['HTTP_AUTHORIZATION']
@@ -76,16 +59,10 @@ function bearer_token(): ?string
     if (stripos($header, 'Bearer ') === 0) {
         return substr($header, 7);
     }
-    // Apache on shared hosting sometimes strips Authorization; allow a field.
+
     return $_POST['token'] ?? request_body()['token'] ?? null;
 }
 
-/**
- * Resolves the caller from the bearer token. Answers 401 and exits when the
- * token is missing or expired — every data endpoint calls this first, which
- * is the MySQL replacement for Supabase's per-user RLS: all queries below
- * it are filtered by the returned user id.
- */
 function require_auth(): array
 {
     $token = bearer_token();
@@ -107,13 +84,11 @@ function require_auth(): array
     return $user;
 }
 
-/** Fresh opaque session token. */
 function new_token(): string
 {
     return bin2hex(random_bytes(32));
 }
 
-/** Creates (and optionally replaces) a session row, returns the token. */
 function issue_token(int $userId, bool $replaceExisting = false): string
 {
     $pdo = db();
@@ -130,14 +105,6 @@ function issue_token(int $userId, bool $replaceExisting = false): string
     return $token;
 }
 
-// ── Batch helpers (nutrition + vitamins) ────────────────────────────────────
-
-/**
- * The caller's most-recent broiler batch. A user who already has a farm but
- * no batches row gets one started today, so the daily nutrition/vitamin
- * screens always have something to log against. Null only for brand-new
- * accounts without any farm.
- */
 function resolve_latest_batch(int $userId): ?array
 {
     $pdo = db();
@@ -154,7 +121,6 @@ function resolve_latest_batch(int $userId): ?array
         return $batch;
     }
 
-    // Seed a batch from the user's newest farm (register.php always makes one).
     $stmt = $pdo->prepare(
         'SELECT id FROM farms WHERE owner_id = ? ORDER BY id DESC LIMIT 1'
     );
@@ -172,7 +138,6 @@ function resolve_latest_batch(int $userId): ?array
             'start_date' => date('Y-m-d'), 'flock_size' => 0];
 }
 
-/** Flock day number (1-based, capped at the 45-day program) for a start date. */
 function batch_day_number(string $startDate): int
 {
     $start = new DateTime(substr($startDate, 0, 10));

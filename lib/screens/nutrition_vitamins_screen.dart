@@ -7,12 +7,6 @@ import '../widgets/custom_text_field.dart';
 import '../widgets/primary_button.dart';
 import '../services/vitamin_service.dart';
 
-/// Monitoring › Nutrition › Vitamins & additives.
-///
-/// An open daily log: quick-add chips (seeded from `vitamin_catalog`), an
-/// entry form, and today's logged doses with tap-to-edit + swipe-to-delete.
-/// Everything reads/writes through [VitaminService], which notifies listeners
-/// so the pill and list refresh live.
 class NutritionVitaminsScreen extends StatefulWidget {
   final ValueChanged<String> go;
 
@@ -34,11 +28,10 @@ class _NutritionVitaminsScreenState extends State<NutritionVitaminsScreen> {
   String _unit = VitaminService.units.first;
   DateTime _date = DateTime.now();
   TimeOfDay _time = TimeOfDay.now();
-  String? _selectedCatalogId; // null => custom typed name
-  String? _editingId; // non-null => updating an existing entry
+  String? _selectedCatalogId;
+  String? _editingId;
   bool _saving = false;
 
-  // Which chip is visually active.
   String? _activeChipLabel;
 
   @override
@@ -62,8 +55,6 @@ class _NutritionVitaminsScreenState extends State<NutritionVitaminsScreen> {
     if (mounted) setState(() {});
   }
 
-  // ── Form helpers ────────────────────────────────────────────────────────
-
   void _resetForm() {
     setState(() {
       _nameCtrl.clear();
@@ -84,9 +75,8 @@ class _NutritionVitaminsScreenState extends State<NutritionVitaminsScreen> {
       _selectedCatalogId = item.id;
       _activeChipLabel = item.name;
       _nameCtrl.text = item.name;
-      _dosageCtrl.text = item.defaultDosage == null
-          ? ''
-          : _formatDosage(item.defaultDosage!);
+      _dosageCtrl.text =
+          item.defaultDosage == null ? '' : _formatDosage(item.defaultDosage!);
       if (item.defaultUnit != null &&
           VitaminService.units.contains(item.defaultUnit)) {
         _unit = item.defaultUnit!;
@@ -196,20 +186,19 @@ class _NutritionVitaminsScreenState extends State<NutritionVitaminsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: FarmoraColors.surface,
-        title: Text('Delete entry?',
-            style: TextStyle(color: FarmoraColors.ink)),
+        title:
+            Text('Delete entry?', style: TextStyle(color: FarmoraColors.ink)),
         content: Text('Remove "${e.displayName}" (${e.dosageLabel})?',
             style: TextStyle(color: FarmoraColors.inkSoft)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Cancel',
-                style: TextStyle(color: FarmoraColors.inkSoft)),
+            child:
+                Text('Cancel', style: TextStyle(color: FarmoraColors.inkSoft)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Delete',
-                style: TextStyle(color: FarmoraColors.crit)),
+            child: Text('Delete', style: TextStyle(color: FarmoraColors.crit)),
           ),
         ],
       ),
@@ -238,13 +227,25 @@ class _NutritionVitaminsScreenState extends State<NutritionVitaminsScreen> {
 
   bool get _isToday {
     final now = DateTime.now();
-    return _date.year == now.year && _date.month == now.month && _date.day == now.day;
+    return _date.year == now.year &&
+        _date.month == now.month &&
+        _date.day == now.day;
   }
 
   String get _dateLabel {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
     ];
     return '${months[_date.month - 1]} ${_date.day}, ${_date.year}';
   }
@@ -255,8 +256,6 @@ class _NutritionVitaminsScreenState extends State<NutritionVitaminsScreen> {
     final ap = _time.period == DayPeriod.am ? 'AM' : 'PM';
     return '$h:$m $ap';
   }
-
-  // ── Build ───────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -270,7 +269,8 @@ class _NutritionVitaminsScreenState extends State<NutritionVitaminsScreen> {
           onBack: () => widget.go('nutrition'),
           right: StatusBadge(
             level: logged > 0 ? 'good' : 'warn',
-            child: Text(logged > 0 ? '$logged logged today' : 'None logged today'),
+            child:
+                Text(logged > 0 ? '$logged logged today' : 'None logged today'),
           ),
         ),
         Expanded(
@@ -336,7 +336,8 @@ class _NutritionVitaminsScreenState extends State<NutritionVitaminsScreen> {
     required VoidCallback onTap,
     bool isCustom = false,
   }) {
-    final activeBg = isCustom ? FarmoraColors.brandSoft : FarmoraColors.brandSoft;
+    final activeBg =
+        isCustom ? FarmoraColors.brandSoft : FarmoraColors.brandSoft;
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: GestureDetector(
@@ -373,9 +374,8 @@ class _NutritionVitaminsScreenState extends State<NutritionVitaminsScreen> {
           Row(
             children: [
               Expanded(
-                child: _sectionLabel(_editingId != null
-                    ? 'Edit entry'
-                    : 'New entry'),
+                child: _sectionLabel(
+                    _editingId != null ? 'Edit entry' : 'New entry'),
               ),
               if (_editingId != null)
                 TextButton(
@@ -461,7 +461,6 @@ class _NutritionVitaminsScreenState extends State<NutritionVitaminsScreen> {
   }
 
   Widget _dropdown() {
-    // Ensure the current unit is always a valid option (e.g. legacy values).
     final items = [
       ...VitaminService.units,
       if (!VitaminService.units.contains(_unit)) _unit,
@@ -511,8 +510,7 @@ class _NutritionVitaminsScreenState extends State<NutritionVitaminsScreen> {
             Text(label,
                 style: TextStyle(fontSize: 13.5, color: FarmoraColors.ink)),
             const Spacer(),
-            Icon(Icons.chevron_right,
-                size: 16, color: FarmoraColors.inkFaint),
+            Icon(Icons.chevron_right, size: 16, color: FarmoraColors.inkFaint),
           ],
         ),
       ),
@@ -571,7 +569,7 @@ class _NutritionVitaminsScreenState extends State<NutritionVitaminsScreen> {
               ),
               confirmDismiss: (_) async {
                 await _confirmDelete(e);
-                return false; // list refreshes via the service instead
+                return false;
               },
               child: FarmoraCard(
                 padding: const EdgeInsets.all(14),

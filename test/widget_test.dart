@@ -8,8 +8,6 @@ import 'package:farmora/theme/app_theme.dart';
 
 void main() {
   setUpAll(() async {
-    // MainShell restores its session from SharedPreferences on init, so the
-    // mock store must exist before the first frame.
     SharedPreferences.setMockInitialValues({});
     await AuthService.instance.restore();
   });

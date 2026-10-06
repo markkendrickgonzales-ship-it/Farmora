@@ -1,17 +1,5 @@
 <?php
-/**
- * vitamins.php — GET
- * One round trip for VitaminService._fetchAll:
- *   { batch_id, day_number, catalog: [...], logs: [...] }
- *
- * `batch_id` / `day_number`  – resolved from the caller's most-recent batch
- *                              (auto-seeded once the user owns a farm).
- * `catalog`                  – shared vitamin_catalog rows for the quick-add
- *                              chips.
- * `logs`                     – the caller's OWN doses for today, read through
- *                              vitamin_logs_view (display_name = COALESCE of
- *                              catalog name and custom_name), newest first.
- */
+
 require_once __DIR__ . '/db_connect.php';
 
 $user  = require_auth();

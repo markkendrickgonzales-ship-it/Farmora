@@ -1,10 +1,5 @@
 <?php
-/**
- * add_report.php — POST JSON
- * { farm_id, title, category, notes?, file_url?, created_at? }
- * Inserts a report stamped with the caller's user id. Attachments go through
- * upload_file.php first; only the returned URL is stored here.
- */
+
 require_once __DIR__ . '/db_connect.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {

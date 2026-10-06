@@ -1,7 +1,5 @@
 import 'json_casts.dart';
 
-/// One field report from the `reports` table, served by get_reports.php and
-/// written by add_report.php (attachments go through upload_file.php).
 class Report {
   final int id;
   final int farmId;
@@ -9,7 +7,6 @@ class Report {
   final String category;
   final String? notes;
 
-  /// Public URL of the uploaded photo/document, if any.
   final String? fileUrl;
   final DateTime createdAt;
 

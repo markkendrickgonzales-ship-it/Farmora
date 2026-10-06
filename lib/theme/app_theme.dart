@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// One complete UI color set. Instances are immutable; switching themes
-/// swaps the globally-visible [FarmoraColors.current] palette.
 class Palette {
   final Color bg;
   final Color surface;
@@ -22,10 +20,8 @@ class Palette {
   final Color info;
   final Color infoSoft;
 
-  /// Foreground (text/icon) to place on top of [brand].
   final Color onBrand;
 
-  /// Login hero gradient stops and their foreground colors.
   final Color heroTop;
   final Color heroBottom;
   final Color onHero;
@@ -57,7 +53,6 @@ class Palette {
   });
 }
 
-/// Original green-on-paper light palette.
 const lightPalette = Palette(
   bg: Color(0xFFEEF1EC),
   surface: Color(0xFFFFFFFF),
@@ -83,7 +78,6 @@ const lightPalette = Palette(
   onHeroSoft: Color(0xFFCFE0D6),
 );
 
-/// Dark counterpart: deep barn-green backgrounds, light ink, muted accents.
 const darkPalette = Palette(
   bg: Color(0xFF121714),
   surface: Color(0xFF1B221D),
@@ -109,15 +103,9 @@ const darkPalette = Palette(
   onHeroSoft: Color(0xFF9FC4B6),
 );
 
-/// Global color accessors used across the app.
-///
-/// These are runtime getters into [current], so every widget that reads them
-/// repaints as soon as [FarmoraThemeController.setDark] swaps the palette.
-/// Nothing referencing them may be `const`.
 class FarmoraColors {
   FarmoraColors._();
 
-  /// The palette every getter below reads from.
   static Palette current = lightPalette;
 
   static Color get bg => current.bg;
@@ -144,27 +132,19 @@ class FarmoraColors {
   static Color get onHeroSoft => current.onHeroSoft;
 }
 
-/// Listenable holding the light/dark choice, persisted with
-/// `SharedPreferences`. [FarmoraApp] watches it so the whole widget tree
-/// rebuilds whenever the palette swaps.
 class FarmoraThemeController extends ValueNotifier<bool> {
   FarmoraThemeController() : super(false);
 
-  /// true = dark mode.
   bool get isDark => value;
 
   static const String _prefsKey = 'farmora_dark_mode';
 
-  /// Loads the persisted preference (call before [runApp]).
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
     value = prefs.getBool(_prefsKey) ?? false;
     FarmoraColors.current = value ? darkPalette : lightPalette;
   }
 
-  /// Switches the global palette; assigning [value] notifies [FarmoraApp],
-  /// which rebuilds the tree. Persisted so the choice survives restarts on
-  /// mobile and web.
   Future<void> setDark(bool isDark) async {
     FarmoraColors.current = isDark ? darkPalette : lightPalette;
     value = isDark;
@@ -173,7 +153,6 @@ class FarmoraThemeController extends ValueNotifier<bool> {
   }
 }
 
-/// App-wide theme state. Read/watch this from any screen.
 final farmoraTheme = FarmoraThemeController();
 
 class FarmoraTheme {

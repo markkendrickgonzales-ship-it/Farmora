@@ -1,6 +1,5 @@
 import 'json_casts.dart';
 
-/// A farm row from the Hostinger MySQL `farms` table via get_farms.php.
 class Farm {
   final int id;
   final String name;

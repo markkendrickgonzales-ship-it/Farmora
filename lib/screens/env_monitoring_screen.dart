@@ -22,7 +22,6 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
   String _lastSync = 'Never';
   bool _refreshing = false;
 
-  // ── Live data ─────────────────────────────────────────────────────────
   bool _loading = true;
   String? _error;
   Map<String, dynamic>? _telemetry;
@@ -39,8 +38,6 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
       final farms = await FarmService.fetchFarms();
       if (!mounted) return;
       if (farms.isEmpty) {
-        print(
-            'ERROR [EnvMonitoring]: Data fetch returned empty farms array []');
         setState(() {
           _loading = false;
           _error = 'No farms found.';
@@ -52,10 +49,7 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
       if (!mounted) return;
 
       if (t == null) {
-        print('ERROR [EnvMonitoring]: Telemetry array was empty []');
-      } else {
-        print('DEBUG [EnvMonitoring]: Telemetry fetched successfully');
-      }
+      } else {}
 
       setState(() {
         _telemetry = t;
@@ -63,7 +57,6 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
         _lastSync = 'Just now';
       });
     } catch (e) {
-      print('ERROR [EnvMonitoring]: Failed to fetch data: $e');
       if (!mounted) return;
       setState(() {
         _error = 'Load failed: $e';
@@ -77,23 +70,21 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
     try {
       if (_farmId != null) {
         final t = await FarmService.fetchLatestTelemetry(_farmId!);
-        if (mounted)
+        if (mounted) {
           setState(() {
             _telemetry = t;
             _lastSync = 'Just now';
           });
+        }
       }
     } finally {
       if (mounted) setState(() => _refreshing = false);
     }
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────
   String _fmt(String key, {int decimals = 1}) {
     final v = _telemetry?[key];
-    if (v == null) {
-      print('ERROR [EnvMonitoring]: Field "$key" is null in telemetry data');
-    }
+    if (v == null) {}
     if (v == null) return '--';
     final numVal = (v as num?)?.toDouble();
     return numVal != null ? numVal.toStringAsFixed(decimals) : '--';
@@ -105,8 +96,6 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
   String _humLevel() {
     final v = (_telemetry?['humidity_percent'] as num?)?.toDouble();
     if (v == null) {
-      print(
-          'ERROR [EnvMonitoring]: humidity_percent is null, cannot determine level');
       return 'good';
     }
     return v >= 75
@@ -119,8 +108,6 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
   String _humTag() {
     final v = (_telemetry?['humidity_percent'] as num?)?.toDouble();
     if (v == null) {
-      print(
-          'ERROR [EnvMonitoring]: humidity_percent is null, cannot determine tag');
       return 'NORMAL';
     }
     return v >= 75
@@ -133,8 +120,6 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
   String _tempLevel() {
     final v = (_telemetry?['temperature_c'] as num?)?.toDouble();
     if (v == null) {
-      print(
-          'ERROR [EnvMonitoring]: temperature_c is null, cannot determine level');
       return 'good';
     }
     return v >= 30
@@ -147,8 +132,6 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
   String _tempTag() {
     final v = (_telemetry?['temperature_c'] as num?)?.toDouble();
     if (v == null) {
-      print(
-          'ERROR [EnvMonitoring]: temperature_c is null, cannot determine tag');
       return 'NORMAL';
     }
     return v >= 30

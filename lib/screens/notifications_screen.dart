@@ -43,8 +43,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     final items = _allItems.where((it) {
-      if (_filter == 'Urgent alerts')
+      if (_filter == 'Urgent alerts') {
         return it['level'] == 'crit' || it['level'] == 'warn';
+      }
       if (_filter == 'Latest updates') return it['level'] == 'info';
       return true;
     }).toList();

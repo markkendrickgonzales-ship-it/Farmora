@@ -1,10 +1,5 @@
 <?php
-/**
- * get_advisories.php — GET
- * Shared Advisory & Guides content from `farming_advisories`. The rows are
- * public editorial content (not user data), but the endpoint still requires a
- * signed-in caller so the API stays closed to anonymous traffic.
- */
+
 require_once __DIR__ . '/db_connect.php';
 
 require_auth();

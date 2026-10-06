@@ -1,8 +1,5 @@
 <?php
-/**
- * get_farms.php — GET
- * Farms owned by the bearer token's user, ordered by name.
- */
+
 require_once __DIR__ . '/db_connect.php';
 
 $user = require_auth();

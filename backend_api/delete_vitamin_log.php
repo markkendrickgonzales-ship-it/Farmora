@@ -1,9 +1,5 @@
 <?php
-/**
- * delete_vitamin_log.php — POST { id }
- * Removes one of the caller's own vitamin log rows. The `logged_by` clause in
- * the DELETE is the MySQL stand-in for the old RLS delete policy.
- */
+
 require_once __DIR__ . '/db_connect.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {

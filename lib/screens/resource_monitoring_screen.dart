@@ -24,7 +24,6 @@ class _ResourceMonitoringScreenState extends State<ResourceMonitoringScreen> {
   String _date = '';
   bool _saved = false;
 
-  // ── Live data ─────────────────────────────────────────────────────────
   bool _loading = true;
   String? _error;
   int? _farmId;
@@ -77,23 +76,17 @@ class _ResourceMonitoringScreenState extends State<ResourceMonitoringScreen> {
         _amount = '';
         _saved = false;
       });
-      _loadData(); // refresh totals
+      _loadData();
     }
   }
 
   String _feedLabel() {
-    if (_totalFeedKg == 0) {
-      print(
-          'ERROR [ResourceMonitoring]: _totalFeedKg is 0, no feed data available');
-    }
+    if (_totalFeedKg == 0) {}
     return _totalFeedKg > 0 ? '${_totalFeedKg.toStringAsFixed(1)} kg' : '-- kg';
   }
 
   String _waterLabel() {
-    if (_totalWaterL == 0) {
-      print(
-          'ERROR [ResourceMonitoring]: _totalWaterL is 0, no water data available');
-    }
+    if (_totalWaterL == 0) {}
     return _totalWaterL > 0 ? '${_totalWaterL.toStringAsFixed(0)} L' : '-- L';
   }
 

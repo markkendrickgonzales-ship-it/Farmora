@@ -1,12 +1,5 @@
--- ============================================================================
--- Farmora — Hostinger MySQL schema (replaces the former Supabase/Postgres DB)
--- Import through phpMyAdmin (hPanel → Databases → phpMyAdmin) or:
---   mysql -u u000000000_farmora -p u000000000_farmora < schema.sql
--- ============================================================================
-
 SET NAMES utf8mb4;
 
--- ── Auth (replaces Supabase Auth) ───────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS users (
   id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   email         VARCHAR(190) NOT NULL UNIQUE,
@@ -35,7 +28,6 @@ CREATE TABLE IF NOT EXISTS password_resets (
   CONSTRAINT fk_reset_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- ── Core farm data (per-user isolation via owner_id / user_id) ──────────────
 CREATE TABLE IF NOT EXISTS farms (
   id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   owner_id   INT UNSIGNED NOT NULL,
@@ -73,7 +65,7 @@ CREATE TABLE IF NOT EXISTS sensor_telemetry (
 CREATE TABLE IF NOT EXISTS alerts (
   id           BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   farm_id      INT UNSIGNED NOT NULL,
-  severity     VARCHAR(20)  NOT NULL DEFAULT 'warning',   -- info | warning | critical
+  severity     VARCHAR(20)  NOT NULL DEFAULT 'warning',
   alert_type   VARCHAR(100) NOT NULL DEFAULT 'Alert',
   message      VARCHAR(255) NOT NULL DEFAULT '',
   triggered_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -82,24 +74,22 @@ CREATE TABLE IF NOT EXISTS alerts (
   INDEX idx_alert_farm (farm_id, created_at)
 ) ENGINE=InnoDB;
 
--- ── Feeding logs (Farm Logs feature) ────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS feeding_logs (
   id             BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id        INT UNSIGNED NOT NULL,
   farm_id        INT UNSIGNED NOT NULL,
-  action_type    VARCHAR(30)  NOT NULL,                   -- Feeding | Watering
+  action_type    VARCHAR(30)  NOT NULL,
   amount         DECIMAL(10,2) NOT NULL,
   unit           VARCHAR(10)  NOT NULL DEFAULT 'kg',
   trigger_source VARCHAR(20)  NOT NULL DEFAULT 'manual',
   notes          TEXT NULL,
-  image_url      VARCHAR(255) NULL,                       -- from upload_file.php
+  image_url      VARCHAR(255) NULL,
   action_time    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_log_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   CONSTRAINT fk_log_farm FOREIGN KEY (farm_id) REFERENCES farms(id) ON DELETE CASCADE,
   INDEX idx_log_user_farm (user_id, farm_id, action_time)
 ) ENGINE=InnoDB;
 
--- ── Reports (Reports feature) ───────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS reports (
   id         BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id    INT UNSIGNED NOT NULL,
@@ -107,18 +97,17 @@ CREATE TABLE IF NOT EXISTS reports (
   title      VARCHAR(190) NOT NULL,
   category   VARCHAR(60)  NOT NULL DEFAULT 'General inspection',
   notes      TEXT NULL,
-  file_url   VARCHAR(255) NULL,                           -- photo/document from upload_file.php
+  file_url   VARCHAR(255) NULL,
   created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_report_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   CONSTRAINT fk_report_farm FOREIGN KEY (farm_id) REFERENCES farms(id) ON DELETE CASCADE,
   INDEX idx_report_user_farm (user_id, farm_id, created_at)
 ) ENGINE=InnoDB;
 
--- ── Nutrition: feed phases + daily logs ─────────────────────────────────────
 CREATE TABLE IF NOT EXISTS feed_phases (
   id                   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  batch_id             INT UNSIGNED NULL,                 -- NULL = shared template
-  name                 VARCHAR(60) NOT NULL,              -- Starter | Grower | Finisher
+  batch_id             INT UNSIGNED NULL,
+  name                 VARCHAR(60) NOT NULL,
   start_day            INT NOT NULL,
   end_day              INT NOT NULL,
   crude_protein        DECIMAL(6,2) NOT NULL DEFAULT 0,
@@ -142,12 +131,11 @@ CREATE TABLE IF NOT EXISTS nutrition_logs (
   body_weight_kg  DECIMAL(8,3) NULL,
   fcr             DECIMAL(8,3) NULL,
   notes           VARCHAR(255) NULL,
-  UNIQUE KEY uq_nutrition_batch_date (batch_id, log_date), -- upsert target
+  UNIQUE KEY uq_nutrition_batch_date (batch_id, log_date),
   CONSTRAINT fk_nut_batch FOREIGN KEY (batch_id) REFERENCES batches(id) ON DELETE CASCADE,
   CONSTRAINT fk_nut_owner FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- ── Vitamins: catalog + daily doses ─────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS vitamin_catalog (
   id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name            VARCHAR(100) NOT NULL,
@@ -160,7 +148,7 @@ CREATE TABLE IF NOT EXISTS vitamin_catalog (
 CREATE TABLE IF NOT EXISTS vitamin_logs (
   id          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   batch_id    INT UNSIGNED NOT NULL,
-  vitamin_id  INT UNSIGNED NULL,               -- NULL for custom entries
+  vitamin_id  INT UNSIGNED NULL,
   custom_name VARCHAR(100) NULL,
   dosage      DECIMAL(10,3) NOT NULL,
   unit        VARCHAR(30) NOT NULL,
@@ -168,15 +156,14 @@ CREATE TABLE IF NOT EXISTS vitamin_logs (
   time_given  TIME NOT NULL,
   day_number  INT NOT NULL DEFAULT 1,
   notes       VARCHAR(255) NULL,
-  logged_by   INT UNSIGNED NOT NULL,           -- owner column (was RLS-filtered)
+  logged_by   INT UNSIGNED NOT NULL,
   created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_vlog_vitamin FOREIGN KEY (vitamin_id) REFERENCES vitamin_catalog(id) ON DELETE SET NULL,
   CONSTRAINT fk_vlog_user FOREIGN KEY (logged_by) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_vlog_day (batch_id, log_date, logged_by)
 ) ENGINE=InnoDB;
 
--- Display-name view (COALESCE of catalog name and custom name), like the old
--- Supabase vitamin_logs_view the app reads through vitamins.php.
+
 CREATE OR REPLACE VIEW vitamin_logs_view AS
 SELECT v.id,
        v.batch_id,
@@ -193,22 +180,16 @@ SELECT v.id,
   FROM vitamin_logs v
   LEFT JOIN vitamin_catalog c ON c.id = v.vitamin_id;
 
--- ── Advisory & Guides content ───────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS farming_advisories (
   id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   title        VARCHAR(190) NOT NULL,
   category     VARCHAR(80)  NOT NULL DEFAULT 'General',
   situation    TEXT NULL,
-  steps        TEXT NULL,                      -- JSON-encoded array of strings
+  steps        TEXT NULL,
   resource_link VARCHAR(300) NULL,
   published_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- ============================================================================
--- Seed data: shared feed-phase templates, vitamin catalog and sample guides.
--- Create your first account through the app's "Create account" screen — it
--- lands in `users` with a properly hashed password (never insert hashes here).
--- ============================================================================
 
 INSERT INTO feed_phases (batch_id, name, start_day, end_day, crude_protein, crude_fat, crude_fiber, calcium, phosphorus, lysine, methionine, metabolizable_energy)
 VALUES

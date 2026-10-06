@@ -1,9 +1,5 @@
 <?php
-/**
- * forgot_password.php — POST { email }
- * Stores a single-use reset token and mails a reset link. Hostinger supports
- * PHP mail(); adjust RESET_LINK_BASE if the form lives elsewhere.
- */
+
 require_once __DIR__ . '/db_connect.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
@@ -21,7 +17,6 @@ $stmt = db()->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
 $stmt->execute([$email]);
 $user = $stmt->fetch();
 
-// Always answer the same way so the endpoint can't be used to probe accounts.
 if ($user) {
     $token = new_token();
     $stmt = db()->prepare(

@@ -1,10 +1,5 @@
 <?php
-/**
- * register.php — POST { email, password, full_name? }
- * Creates the account and returns a session in one step (the app signs the
- * new user straight in, mirroring the old "email confirmation disabled"
- * Supabase behaviour).
- */
+
 require_once __DIR__ . '/db_connect.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
@@ -36,7 +31,6 @@ $stmt = $pdo->prepare(
 $stmt->execute([$email, password_hash($pass, PASSWORD_DEFAULT), $fullNom]);
 $userId = (int)$pdo->lastInsertId();
 
-// New farmers start with a demo farm so the dashboard has something to show.
 $stmt = $pdo->prepare(
     'INSERT INTO farms (owner_id, farm_name, location, farm_type) VALUES (?, ?, ?, ?)'
 );

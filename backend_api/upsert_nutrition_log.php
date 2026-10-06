@@ -1,13 +1,5 @@
 <?php
-/**
- * upsert_nutrition_log.php — POST
- * Body: { batch_id, log_date (YYYY-MM-DD), feed_intake_g,
- *         body_weight_kg?, fcr?, notes? }
- *
- * Inserts or updates one daily reading against the UNIQUE(batch_id, log_date)
- * key of `nutrition_logs`. The batch must belong to the caller; owner_id is
- * stamped from the bearer token, never from the request body.
- */
+
 require_once __DIR__ . '/db_connect.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
@@ -31,7 +23,6 @@ if ($intakeG === false || $intakeG === null || $intakeG < 0) {
     json_response(false, null, 'feed_intake_g must be a non-negative number', 400);
 }
 
-// The batch must be the caller's own.
 $owned = db()->prepare('SELECT 1 FROM batches WHERE id = ? AND owner_id = ? LIMIT 1');
 $owned->execute([$batchId, (int)$user['id']]);
 if (!$owned->fetch()) {

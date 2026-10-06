@@ -1,14 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
-/// A themed text input that is always backed by a live [TextEditingController].
-///
-/// Earlier this widget was a `StatelessWidget` that used `TextFormField`'s
-/// `initialValue` whenever no controller was supplied. That made typed input
-/// fragile: `initialValue` only seeds the field once, so on parent rebuilds a
-/// bare value could fail to render/update and form resets wouldn't clear it.
-/// Now the widget either drives the caller's controller or owns a stable
-/// internal one, so typed text always renders and updates live.
 class CustomTextField extends StatefulWidget {
   final String placeholder;
   final IconData? icon;
@@ -40,10 +32,9 @@ class CustomTextField extends StatefulWidget {
 class _CustomTextFieldState extends State<CustomTextField> {
   TextEditingController? _internal;
 
-  /// The controller every edit goes through: the caller's when provided,
-  /// otherwise our own stable instance.
   TextEditingController get _controller =>
-      widget.controller ?? (_internal ??= TextEditingController(text: widget.value));
+      widget.controller ??
+      (_internal ??= TextEditingController(text: widget.value));
 
   @override
   void initState() {
@@ -56,9 +47,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
   @override
   void didUpdateWidget(covariant CustomTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Uncontrolled mode: mirror programmatic changes to `value` (e.g. a form
-    // reset setting the bound string back to '') without clobbering text the
-    // user is actively editing, which only differs when the parent changed it.
+
     if (widget.controller == null &&
         widget.value != null &&
         widget.value != _controller.text) {

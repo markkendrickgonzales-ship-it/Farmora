@@ -51,11 +51,9 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
           _farmId = farms.first.id;
           _farmName = farms.first.name;
         });
-      } else {
-        print('ERROR [ReportUpload]: No farms found');
       }
     } catch (e) {
-      print('ERROR [ReportUpload]: Failed to load farm info: $e');
+      debugPrint('$e');
     }
   }
 
@@ -71,7 +69,6 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
         });
       }
     } catch (e) {
-      print('ERROR [ReportUpload]: Failed to pick image from camera: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to capture image')),
@@ -92,7 +89,6 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
         });
       }
     } catch (e) {
-      print('ERROR [ReportUpload]: Failed to pick image from gallery: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to select image')),
@@ -118,8 +114,6 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
     setState(() => _uploading = true);
 
     try {
-      // Upload through FarmService: the photo (if picked) goes to
-      // upload_file.php first, then add_report.php stores its URL.
       await FarmService.insertReport(
         farmId: _farmId!,
         title: _title,
@@ -133,7 +127,7 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
           _uploading = false;
           _submitted = true;
         });
-        // Show success message
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Report submitted successfully'),
@@ -141,11 +135,10 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
             duration: Duration(seconds: 2),
           ),
         );
-        // Trigger refresh callback
+
         widget.onSubmitted?.call();
       }
     } catch (e) {
-      print('ERROR [ReportUpload]: Failed to upload report: $e');
       if (mounted) {
         setState(() => _uploading = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -379,7 +372,7 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
                           children: [
                             Icon(Icons.camera_alt,
                                 size: 24, color: FarmoraColors.brand),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text('Camera',
                                 style: TextStyle(
                                     fontSize: 12, color: FarmoraColors.ink)),
@@ -396,7 +389,7 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
                           children: [
                             Icon(Icons.photo_library,
                                 size: 24, color: FarmoraColors.brand),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text('Gallery',
                                 style: TextStyle(
                                     fontSize: 12, color: FarmoraColors.ink)),

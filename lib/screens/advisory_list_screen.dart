@@ -8,8 +8,6 @@ import '../services/farm_service.dart';
 import '../utils/app_route.dart';
 import 'advisory_detail_screen.dart';
 
-/// Lists every guide stored in the `farming_advisories` MySQL table.
-/// Tapping a card pushes [AdvisoryDetailScreen] with the 300ms slide route.
 class AdvisoryListScreen extends StatefulWidget {
   final ValueChanged<String> go;
 
@@ -56,7 +54,6 @@ class _AdvisoryListScreenState extends State<AdvisoryListScreen> {
       SlideFadeRoute(
         AdvisoryDetailScreen(
           advisory: advisory,
-          // Route system back through the shell so its state stays in sync.
           onBack: () {
             if (Navigator.of(context).canPop()) {
               Navigator.pop(context);
@@ -69,7 +66,6 @@ class _AdvisoryListScreenState extends State<AdvisoryListScreen> {
     );
   }
 
-  // ── Flexible schema helpers (column names may vary) ──────────────────
   static String titleOf(Map<String, dynamic> a) =>
       (a['title'] ?? a['name'] ?? 'Untitled advisory').toString();
   static String categoryOf(Map<String, dynamic> a) =>
@@ -186,8 +182,6 @@ class _AdvisoryListScreenState extends State<AdvisoryListScreen> {
                                             ],
                                           ),
                                         ),
-                                        // Hint that an external guide/video
-                                        // link is included.
                                         if (AdvisoryDetailScreen.resourceLinkOf(
                                                 a) !=
                                             null) ...[

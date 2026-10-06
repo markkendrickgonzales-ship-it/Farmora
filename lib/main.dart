@@ -27,9 +27,9 @@ import 'services/vitamin_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Restore the persisted light/dark choice before the first frame.
+
   await farmoraTheme.load();
-  // Load any session persisted by the Hostinger PHP auth flow.
+
   await AuthService.instance.restore();
   runApp(const FarmoraApp());
 }
@@ -39,9 +39,6 @@ class FarmoraApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Watching the theme controller rebuilds the entire tree the instant the
-    // switch flips, so every FarmoraColors getter resolves against the new
-    // palette without an app restart.
     return ListenableBuilder(
       listenable: farmoraTheme,
       builder: (context, _) => MaterialApp(
@@ -50,12 +47,7 @@ class FarmoraApp extends StatelessWidget {
         theme: FarmoraTheme.themeData,
         darkTheme: FarmoraTheme.darkThemeData,
         themeMode: farmoraTheme.isDark ? ThemeMode.dark : ThemeMode.light,
-        // Deliberately not `const`: a fresh MainShell instance forces every
-        // screen below it to rebuild and re-read the palette. A `const` here
-        // would canonicalise the subtree so a theme flip would NOT repaint
-        // until some unrelated setState fired in the current screen.
-        // ignore: prefer_const_constructors
-        home: MainShell(),
+        home: const MainShell(),
       ),
     );
   }
@@ -74,9 +66,6 @@ class _MainShellState extends State<MainShell> {
   bool _needsRefreshFarmLogs = false;
   bool _needsRefreshReports = false;
 
-  // The id of the user whose data is currently loaded into the process-wide
-  // service singletons. Used to detect a logout or an account switch so the
-  // caches can be cleared and re-fetched for the new user.
   String? _loadedUserId;
 
   final List<String> _navScreens = const [
@@ -97,7 +86,7 @@ class _MainShellState extends State<MainShell> {
   void initState() {
     super.initState();
     _setupAuthListener();
-    // A restored session means the user lands straight on home.
+
     _initialized = true;
     if (AuthService.instance.isSignedIn) {
       _screen = 'home';
@@ -120,8 +109,6 @@ class _MainShellState extends State<MainShell> {
     final newUserId = auth.isSignedIn ? auth.userIdStr : null;
     if (!mounted) return;
 
-    // Clear cached per-user data whenever the account changes or the user
-    // signs out, so a fresh login never shows the previous user's records.
     if (newUserId != _loadedUserId) {
       VitaminService.instance.reset();
       NutritionService.instance.reset();
@@ -130,7 +117,6 @@ class _MainShellState extends State<MainShell> {
 
     setState(() {
       if (auth.isSignedIn) {
-        // Always land on (or stay on) home for a newly authenticated user.
         if (_screen == 'login') _screen = 'home';
       } else {
         _screen = 'login';
@@ -156,8 +142,7 @@ class _MainShellState extends State<MainShell> {
 
   Future<void> _signOut() async {
     await AuthService.instance.logout();
-    // Belt-and-braces: the auth listener also resets, but clear eagerly here
-    // so cached data is gone before the sign-out frame paints.
+
     VitaminService.instance.reset();
     NutritionService.instance.reset();
     _loadedUserId = null;
@@ -225,11 +210,8 @@ class _MainShellState extends State<MainShell> {
     final showNav = _navScreens.contains(_screen);
 
     return PopScope(
-      // On the login screen let the system back button exit the app.
       canPop: _screen == 'login',
       onPopInvokedWithResult: (didPop, _) {
-        // For sub-screens, route back to their logical parent instead of
-        // closing the app.
         if (didPop) return;
         const childParents = {
           'resourceMonitoring': 'monitoringHub',
@@ -255,13 +237,10 @@ class _MainShellState extends State<MainShell> {
               Expanded(
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 320),
-                  // shellScreenTransition applies its own ease, so feed it a
-                  // linear ramp to avoid double-easing.
                   switchInCurve: Curves.linear,
                   switchOutCurve: Curves.linear,
                   transitionBuilder: shellScreenTransition,
                   child: KeyedSubtree(
-                    // A new key per screen triggers the slide + fade.
                     key: ValueKey(_screen),
                     child: _buildScreen(),
                   ),

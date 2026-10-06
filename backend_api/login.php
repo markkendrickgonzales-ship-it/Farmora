@@ -1,8 +1,5 @@
 <?php
-/**
- * login.php — POST { email, password }
- * Verifies the credentials and returns a fresh bearer session.
- */
+
 require_once __DIR__ . '/db_connect.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {

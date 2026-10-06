@@ -6,9 +6,6 @@ import '../widgets/primary_button.dart';
 import '../widgets/farmora_card.dart';
 import '../services/farm_service.dart';
 
-/// Editing flow for the signed-in user's profile. Saves through
-/// [FarmService.updateMyProfile] and pops with `true` so the caller can
-/// refresh.
 class EditProfileScreen extends StatefulWidget {
   final UserProfile? profile;
 

@@ -43,7 +43,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) setState(() => _profile = p);
     } catch (e) {
       if (mounted) {
-        setState(() {}); // keep _profile null; header shows fallback
+        setState(() {});
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -56,7 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         EditProfileScreen(profile: _profile),
       ),
     );
-    // Refresh from the backend if the edit screen reported a save.
+
     if (updated == true) await _loadProfile();
   }
 
@@ -259,7 +259,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onChanged: (val) => setState(() => _push = val),
                   ),
                   Divider(height: 1, color: FarmoraColors.line),
-                  // Drives the app-wide light/dark palette swap.
                   _ToggleRow(
                     icon: Icons.dark_mode_outlined,
                     label: 'Dark mode',

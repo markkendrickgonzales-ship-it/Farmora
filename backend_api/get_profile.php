@@ -1,9 +1,5 @@
 <?php
-/**
- * get_profile.php — GET
- * The signed-in user's own row from `users`. Flutter's UserProfile.fromJson
- * reads id / email / full_name / role / phone / location.
- */
+
 require_once __DIR__ . '/db_connect.php';
 
 $user = require_auth();

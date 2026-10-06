@@ -1,13 +1,5 @@
 <?php
-/**
- * upload_file.php — POST multipart/form-data
- * Fields: `file` (the photo/document binary), optional `folder`
- * (feeding_logs | reports | general).
- *
- * Stores the file under backend_api/uploads/<folder>/ on Hostinger's file
- * storage and returns its public URL, which add_log.php / add_report.php
- * persist as image_url / file_url.
- */
+
 require_once __DIR__ . '/db_connect.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
@@ -21,12 +13,10 @@ if (empty($_FILES['file']) || ($_FILES['file']['error'] ?? UPLOAD_ERR_NO_FILE) !
 
 $file = $_FILES['file'];
 
-// 15 MB cap — also raise upload_max_filesize / post_max_size in hPanel if needed.
 if ($file['size'] > 15 * 1024 * 1024) {
     json_response(false, null, 'File is larger than 15 MB', 413);
 }
 
-// Only allow a sane set of extensions / mime prefixes.
 $allowedExt  = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt'];
 $ext  = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 if (!in_array($ext, $allowedExt, true)) {
@@ -43,7 +33,6 @@ if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true)) {
     json_response(false, null, 'Could not create storage folder', 500);
 }
 
-// Collision-proof, non-guessable name scoped to the uploading user.
 $safeName = sprintf('u%d_%s_%s.%s',
     (int)$user['id'],
     date('Ymd_His'),

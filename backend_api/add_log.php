@@ -1,10 +1,5 @@
 <?php
-/**
- * add_log.php — POST JSON
- * { farm_id, action_type, amount, unit, trigger_source?, notes?, image_url?, action_time? }
- * Inserts one feeding / watering log stamped with the caller's user id.
- * (Photos are uploaded first through upload_file.php; only the URL lands here.)
- */
+
 require_once __DIR__ . '/db_connect.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {

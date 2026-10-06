@@ -1,16 +1,5 @@
 <?php
-/**
- * get_feed_program.php — GET
- * One round trip for NutritionService._loadProgram:
- *   { batch: {id, start_date} | null, phases: [...], history: [...] }
- *
- * `batch`   – the caller's most-recent flock batch (auto-seeded once the user
- *             owns a farm, see resolve_latest_batch()).
- * `phases`  – the batch's own feed phases when defined, otherwise the shared
- *             templates (batch_id IS NULL) seeded by schema.sql.
- * `history` – the batch's last 7 days of nutrition_logs, oldest first, for
- *             the "Nutrition history" strip.
- */
+
 require_once __DIR__ . '/db_connect.php';
 
 $user  = require_auth();
@@ -25,7 +14,6 @@ if ($batch !== null) {
     ];
 }
 
-// Phases: prefer the batch's custom program, fall back to shared templates.
 if ($batch !== null) {
     $stmt = db()->prepare(
         'SELECT name, start_day, end_day, crude_protein, crude_fat, crude_fiber,
@@ -48,7 +36,6 @@ if (empty($payload['phases'])) {
     )->fetchAll();
 }
 
-// History: last 7 recorded days for this batch's owner.
 if ($batch !== null) {
     $stmt = db()->prepare(
         'SELECT log_date, feed_intake_g, body_weight_kg, fcr, notes
@@ -61,12 +48,11 @@ if ($batch !== null) {
     $stmt->execute([(int)$batch['id'], (int)$user['id']]);
     $rows = $stmt->fetchAll();
 
-    // Flutter parses log_date with DateTime.tryParse — normalise DATE output.
     foreach ($rows as &$row) {
         $row['log_date'] = str_replace(' ', 'T', substr($row['log_date'], 0, 10));
     }
     unset($row);
-    $payload['history'] = array_reverse($rows); // oldest first for the strip
+    $payload['history'] = array_reverse($rows);
 }
 
 json_response(true, $payload);

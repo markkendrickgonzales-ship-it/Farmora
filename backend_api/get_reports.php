@@ -1,8 +1,5 @@
 <?php
-/**
- * get_reports.php — GET ?farm_id=1&limit=50
- * Reports for one of the caller's farms, newest first.
- */
+
 require_once __DIR__ . '/db_connect.php';
 
 $user   = require_auth();

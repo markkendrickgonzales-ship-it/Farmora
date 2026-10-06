@@ -6,12 +6,6 @@ import '../widgets/screen_header.dart';
 import '../services/nutrition_service.dart';
 import '../services/vitamin_service.dart';
 
-/// Nutrition landing screen, nested under Monitoring
-/// (breadcrumb: Monitoring › Nutrition).
-///
-/// Lists four rows in the same style as the Monitoring hub, then a "Today's
-/// log" preview. It listens to [VitaminService] so the Vitamins pill and the
-/// preview update live as doses are logged.
 class NutritionScreen extends StatefulWidget {
   final ValueChanged<String> go;
 
@@ -51,7 +45,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
 
     final feedDesc = state?.phaseLabel ??
         (svc.loading ? 'Loading feed program\u2026' : 'No feed program yet');
-    final feedTag = state != null ? 'On track' : (svc.loading ? 'Loading' : null);
+    final feedTag =
+        state != null ? 'On track' : (svc.loading ? 'Loading' : null);
     final feedLevel = state != null ? 'good' : 'info';
 
     return Column(
@@ -154,7 +149,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
                 const SizedBox(height: 2),
                 Text(
                   desc,
-                  style: TextStyle(fontSize: 11.5, color: FarmoraColors.inkSoft),
+                  style:
+                      TextStyle(fontSize: 11.5, color: FarmoraColors.inkSoft),
                 ),
               ],
             ),
@@ -166,7 +162,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
                 StatusBadge(level: level, child: Text(tag)),
                 const SizedBox(height: 6),
               ],
-              Icon(Icons.chevron_right, size: 15, color: FarmoraColors.inkFaint),
+              Icon(Icons.chevron_right,
+                  size: 15, color: FarmoraColors.inkFaint),
             ],
           ),
         ],
@@ -190,8 +187,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                 style: TextStyle(fontSize: 12.5, color: FarmoraColors.inkSoft),
               ),
             ),
-            Icon(Icons.chevron_right,
-                size: 15, color: FarmoraColors.inkFaint),
+            Icon(Icons.chevron_right, size: 15, color: FarmoraColors.inkFaint),
           ],
         ),
       );
@@ -219,8 +215,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
           Container(
             width: 9,
             height: 9,
-            decoration:
-                BoxDecoration(color: FarmoraColors.good, shape: BoxShape.circle),
+            decoration: BoxDecoration(
+                color: FarmoraColors.good, shape: BoxShape.circle),
           ),
           const SizedBox(width: 12),
           Expanded(

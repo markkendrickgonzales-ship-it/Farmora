@@ -15,7 +15,6 @@ class HistoryLogScreen extends StatefulWidget {
 }
 
 class _HistoryLogScreenState extends State<HistoryLogScreen> {
-  // ── Live data ─────────────────────────────────────────────────────────
   bool _loading = true;
   String? _error;
   List<_LogEntry> _entries = [];
@@ -79,7 +78,6 @@ class _HistoryLogScreenState extends State<HistoryLogScreen> {
         ));
       }
 
-      // sort newest first
       entries.sort((a, b) {
         if (a.time == null && b.time == null) return 0;
         if (a.time == null) return 1;

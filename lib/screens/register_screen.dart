@@ -7,9 +7,6 @@ import '../widgets/farmora_logo.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 
-/// Dedicated sign-up screen, pushed as a full-screen route from the Login
-/// screen (breadcrumb-free; reached via "Create account"). Wired directly to
-/// the Hostinger PHP auth backend via [AuthService]. Back returns to Login.
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -63,8 +60,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (!mounted) return;
 
-      // register.php signs the new account in immediately, so MainShell's
-      // auth listener has already routed to home; just dismiss this route.
       Navigator.of(context).popUntil((route) => route.isFirst);
     } on ApiException catch (e) {
       if (mounted) setState(() => _errorMsg = e.message);
@@ -98,8 +93,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               title: 'Create account',
               subtitle: 'Join Farmora in a few seconds',
               leading: FarmoraLogo(size: 34, radius: 6),
-              // No onBack: ScreenHeader falls back to Navigator.pop, which is
-              // correct because this screen is a real pushed route.
             ),
             Expanded(
               child: ListView(
@@ -153,8 +146,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     children: [
                       Text(
                         'Already have an account?',
-                        style:
-                            TextStyle(fontSize: 12.5, color: FarmoraColors.inkSoft),
+                        style: TextStyle(
+                            fontSize: 12.5, color: FarmoraColors.inkSoft),
                       ),
                       TextButton(
                         onPressed:

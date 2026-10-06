@@ -3,15 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'api_service.dart';
 
-/// Session store backed by the Hostinger PHP auth endpoints
-/// (backend_api/register.php / login.php / logout.php).
-///
-/// Replaces the former Supabase Auth flow. The bearer token issued by PHP is
-/// persisted in [SharedPreferences] so the session survives app restarts;
-/// [restore] re-validates it lazily on the next authenticated request (the
-/// backend answers 401 and screens surface the error). Being a
-/// [ChangeNotifier], [MainShell] listens to it for login / logout transitions
-/// exactly as it used to listen to Supabase's `onAuthStateChange`.
 class AuthService extends ChangeNotifier {
   AuthService._();
 
@@ -33,14 +24,12 @@ class AuthService extends ChangeNotifier {
   String get email => _email;
   String get fullName => _fullName;
 
-  /// String form for callers that key caches by owner id (services, models).
   String get userIdStr => _userId?.toString() ?? '';
   bool get isSignedIn => _token != null && _userId != null;
 
   Future<SharedPreferences> _prefsStore() async =>
       _prefs ??= await SharedPreferences.getInstance();
 
-  /// Loads a persisted session into memory. Call once before [runApp].
   Future<void> restore() async {
     final p = await _prefsStore();
     _token = p.getString(_kToken);
@@ -50,7 +39,6 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Signs in via login.php; throws [ApiException] with the server message.
   Future<void> login({
     required String email,
     required String password,
@@ -62,8 +50,6 @@ class AuthService extends ChangeNotifier {
     await _saveSession(Map<String, dynamic>.from(data as Map));
   }
 
-  /// Creates the account via register.php and signs straight in (the PHP
-  /// script returns a session like login.php, so no email confirmation step).
   Future<void> register({
     required String email,
     required String password,
@@ -77,13 +63,10 @@ class AuthService extends ChangeNotifier {
     await _saveSession(Map<String, dynamic>.from(data as Map));
   }
 
-  /// Best-effort server-side token invalidation, then local wipe.
   Future<void> logout() async {
     try {
       await ApiService.instance.post('logout.php', {});
-    } catch (_) {
-      // Offline / expired token: local sign-out still proceeds.
-    }
+    } catch (_) {}
     final p = await _prefsStore();
     await p.remove(_kToken);
     await p.remove(_kUserId);
@@ -96,8 +79,6 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Mirrors profile edits into the in-memory session (name shown on the
-  /// profile header before the next fetch).
   Future<void> updateCachedName(String fullName) async {
     _fullName = fullName;
     final p = await _prefsStore();
@@ -105,11 +86,8 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Asks the PHP backend to email a password-reset link to the signed-in
-  /// user's address (forgot_password.php).
   Future<void> requestPasswordReset() async {
-    await ApiService.instance
-        .post('forgot_password.php', {'email': _email});
+    await ApiService.instance.post('forgot_password.php', {'email': _email});
   }
 
   Future<void> _saveSession(Map<String, dynamic> session) async {

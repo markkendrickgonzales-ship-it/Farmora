@@ -5,13 +5,6 @@ import '../widgets/status_badge.dart';
 import '../widgets/screen_header.dart';
 import '../services/nutrition_service.dart';
 
-/// Full-screen detail reached from "Feed program", "Guaranteed analysis" and
-/// "Nutrition history". Shows the current phase's guaranteed analysis, every
-/// phase of the active batch's program (past ones marked completed) and a
-/// 7-day intake / FCR strip driven by real `nutrition_logs` readings.
-///
-/// Listens to [NutritionService] so it repaints once the batch program and
-/// history load from the PHP backend.
 class NutritionFeedProgramScreen extends StatefulWidget {
   final ValueChanged<String> go;
 
@@ -22,7 +15,8 @@ class NutritionFeedProgramScreen extends StatefulWidget {
       _NutritionFeedProgramScreenState();
 }
 
-class _NutritionFeedProgramScreenState extends State<NutritionFeedProgramScreen> {
+class _NutritionFeedProgramScreenState
+    extends State<NutritionFeedProgramScreen> {
   @override
   void initState() {
     super.initState();
@@ -119,7 +113,10 @@ class _NutritionFeedProgramScreenState extends State<NutritionFeedProgramScreen>
       ['Phosphorus', '${p.phosphorus.toStringAsFixed(2)} %'],
       ['Lysine', '${p.lysine.toStringAsFixed(2)} %'],
       ['Methionine', '${p.methionine.toStringAsFixed(2)} %'],
-      ['Metabolizable energy', '${p.metabolizableEnergy.toStringAsFixed(0)} kcal/kg'],
+      [
+        'Metabolizable energy',
+        '${p.metabolizableEnergy.toStringAsFixed(0)} kcal/kg'
+      ],
     ];
 
     return FarmoraCard(
@@ -136,8 +133,8 @@ class _NutritionFeedProgramScreenState extends State<NutritionFeedProgramScreen>
                 children: [
                   Text(
                     rows[i][0],
-                    style: TextStyle(
-                        fontSize: 12.5, color: FarmoraColors.inkSoft),
+                    style:
+                        TextStyle(fontSize: 12.5, color: FarmoraColors.inkSoft),
                   ),
                   Text(
                     rows[i][1],

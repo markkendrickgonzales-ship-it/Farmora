@@ -7,8 +7,6 @@ class ScreenHeader extends StatelessWidget {
   final VoidCallback? onBack;
   final Widget? right;
 
-  /// Optional brand/widget shown before the back button (e.g. the Farmora
-  /// logo on the register screen). Does not affect the back-button rules.
   final Widget? leading;
 
   const ScreenHeader({

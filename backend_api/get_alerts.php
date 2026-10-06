@@ -1,8 +1,5 @@
 <?php
-/**
- * get_alerts.php — GET ?farm_id=1&limit=10   (farm_id optional)
- * Most recent alerts across the caller's farms, newest first.
- */
+
 require_once __DIR__ . '/db_connect.php';
 
 $user   = require_auth();

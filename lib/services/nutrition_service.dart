@@ -1,10 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'api_service.dart';
 
-// ── Safe JSON cast helpers ─────────────────────────────────────────────────
-// The PHP/MySQL backend can return numeric/id columns as int, num or String
-// depending on the underlying type, so every value read from a response row
-// is normalised here instead of being force-cast.
 num? _asNum(dynamic v) {
   if (v is num) return v;
   if (v is String) return num.tryParse(v);
@@ -13,20 +9,18 @@ num? _asNum(dynamic v) {
 
 String? _asStr(dynamic v) => v?.toString();
 
-/// One nutritional phase of a broiler batch (Starter → Grower → Finisher),
-/// including its guaranteed-analysis values. Read from the `feed_phases` table.
 class FeedPhase {
   final String name;
   final int startDay;
   final int endDay;
-  final double crudeProtein; // %
-  final double crudeFat; // %
-  final double crudeFiber; // %
-  final double calcium; // %
-  final double phosphorus; // %
-  final double lysine; // %
-  final double methionine; // %
-  final double metabolizableEnergy; // kcal/kg
+  final double crudeProtein;
+  final double crudeFat;
+  final double crudeFiber;
+  final double calcium;
+  final double phosphorus;
+  final double lysine;
+  final double methionine;
+  final double metabolizableEnergy;
 
   const FeedPhase({
     required this.name,
@@ -53,7 +47,8 @@ class FeedPhase {
         phosphorus: _asNum(row['phosphorus'])?.toDouble() ?? 0,
         lysine: _asNum(row['lysine'])?.toDouble() ?? 0,
         methionine: _asNum(row['methionine'])?.toDouble() ?? 0,
-        metabolizableEnergy: _asNum(row['metabolizable_energy'])?.toDouble() ?? 0,
+        metabolizableEnergy:
+            _asNum(row['metabolizable_energy'])?.toDouble() ?? 0,
       );
 
   bool contains(int day) => day >= startDay && day <= endDay;
@@ -61,7 +56,6 @@ class FeedPhase {
   bool isPast(int currentDay) => endDay < currentDay;
   bool isUpcoming(int currentDay) => startDay > currentDay;
 
-  /// Status used on the Feed-program screen: done / active / upcoming.
   String statusFor(int currentDay) {
     if (isPast(currentDay)) return 'done';
     if (contains(currentDay)) return 'active';
@@ -69,12 +63,10 @@ class FeedPhase {
   }
 }
 
-/// A single daily nutrition reading (feed intake per bird + FCR) for the
-/// "Nutrition history" strip, read from the `nutrition_logs` table.
 class NutritionReading {
   final DateTime date;
-  final double intakeG; // grams / bird / day
-  final double? fcr; // feed conversion ratio (null when not recorded)
+  final double intakeG;
+  final double? fcr;
 
   const NutritionReading({
     required this.date,
@@ -82,15 +74,15 @@ class NutritionReading {
     this.fcr,
   });
 
-  factory NutritionReading.fromRow(Map<String, dynamic> row) => NutritionReading(
-        date: DateTime.tryParse(_asStr(row['log_date']) ?? '') ?? DateTime.now(),
+  factory NutritionReading.fromRow(Map<String, dynamic> row) =>
+      NutritionReading(
+        date:
+            DateTime.tryParse(_asStr(row['log_date']) ?? '') ?? DateTime.now(),
         intakeG: _asNum(row['feed_intake_g'])?.toDouble() ?? 0,
         fcr: _asNum(row['fcr'])?.toDouble(),
       );
 }
 
-/// Immutable snapshot of the active batch's nutrition program, built by
-/// [NutritionService] once real data is loaded. Screens read it synchronously.
 class BatchNutritionState {
   final String batchId;
   final int currentDay;
@@ -104,21 +96,13 @@ class BatchNutritionState {
     required this.phases,
   });
 
-  FeedPhase get currentPhase =>
-      phases.firstWhere((p) => p.contains(currentDay), orElse: () => phases.first);
+  FeedPhase get currentPhase => phases.firstWhere((p) => p.contains(currentDay),
+      orElse: () => phases.first);
 
-  /// Subtitle for the Feed-program row, e.g. "Grower phase · Day 18 of 45".
   String get phaseLabel =>
       '${currentPhase.name} phase · Day $currentDay of $programLength';
 }
 
-/// Hostinger PHP/MySQL-backed feed-program + nutrition-history store.
-///
-/// Replaces the former hardcoded demo data. It is a [ChangeNotifier] singleton
-/// so the Nutrition screens refresh live once [ensureLoaded] resolves the
-/// active batch, its phases and its history. Every query is scoped to the
-/// signed-in user server-side: the PHP endpoint resolves the batch through the
-/// bearer token's owner id.
 class NutritionService extends ChangeNotifier {
   NutritionService._();
 
@@ -142,12 +126,8 @@ class NutritionService extends ChangeNotifier {
   List<FeedPhase> get phases => _phases;
   List<NutritionReading> get history => _history;
 
-  /// True once real phases are available; screens use this to decide whether
-  /// to show content or a loading / empty state (no more fake data).
   bool get hasData => _phases.isNotEmpty;
 
-  /// The current program snapshot, or null while loading / when the user has
-  /// no feed phases yet. Callers must null-check (screens show a spinner).
   BatchNutritionState? get state {
     if (_phases.isEmpty) return null;
     return BatchNutritionState(
@@ -158,8 +138,6 @@ class NutritionService extends ChangeNotifier {
     );
   }
 
-  /// Loads the program once. Safe to call from multiple screens; [force]
-  /// re-fetches even if already loaded.
   Future<void> ensureLoaded({bool force = false}) async {
     if (_loaded && !force) return;
     await load();
@@ -172,15 +150,12 @@ class NutritionService extends ChangeNotifier {
       await _loadProgram();
       _loaded = true;
     } catch (e) {
-      print('DEBUG: NutritionService.load error = $e');
       _error = e.toString();
     } finally {
       _setLoading(false);
     }
   }
 
-  /// Clears all cached, per-user data so the next [ensureLoaded] re-fetches
-  /// for a newly signed-in user. Called on sign-out / account switch.
   void reset() {
     _phases = const [];
     _history = const [];
@@ -192,13 +167,6 @@ class NutritionService extends ChangeNotifier {
     _error = null;
     _notify();
   }
-
-  // ── Program fetch ───────────────────────────────────────────────────────
-  //
-  // get_feed_program.php resolves everything this store needs in one round
-  // trip: the caller's most-recent batch (id + start_date), the batch's feed
-  // phases (falling back to the shared templates server-side) and the last
-  // 7 days of nutrition history.
 
   Future<void> _loadProgram() async {
     final data = await ApiService.instance.get('get_feed_program.php');
@@ -217,9 +185,6 @@ class NutritionService extends ChangeNotifier {
         _currentDay = days < 1 ? 1 : days;
       }
     } else {
-      // No batches row for this user — day stays 1 and shared template
-      // phases are what the backend returned, so the screen still renders
-      // with real (non-demo) data.
       _batchId = null;
       _currentDay = 1;
     }
@@ -228,12 +193,13 @@ class NutritionService extends ChangeNotifier {
         .map((r) => FeedPhase.fromRow(Map<String, dynamic>.from(r as Map)))
         .toList();
     _history = (map['history'] as List? ?? [])
-        .map((r) => NutritionReading.fromRow(Map<String, dynamic>.from(r as Map)))
+        .map((r) =>
+            NutritionReading.fromRow(Map<String, dynamic>.from(r as Map)))
         .toList();
 
     if (_phases.isNotEmpty) {
       _programLength = _phases.last.endDay;
-      // Keep the current day within the program length.
+
       if (_currentDay > _programLength) _currentDay = _programLength;
     }
     _notify();
@@ -243,14 +209,10 @@ class NutritionService extends ChangeNotifier {
     try {
       await _loadProgram();
     } catch (e) {
-      print('DEBUG: NutritionService._reloadHistory error = $e');
+      debugPrint('$e');
     }
   }
 
-  // ── Write ───────────────────────────────────────────────────────────────
-
-  /// Inserts or updates one daily reading for the active batch through
-  /// upsert_nutrition_log.php, which stamps the row with the token's user id.
   Future<void> upsertDailyReading({
     required DateTime date,
     required double intakeG,
@@ -261,8 +223,7 @@ class NutritionService extends ChangeNotifier {
     if (_batchId == null) {
       throw Exception('No active batch to record nutrition against.');
     }
-    final dateIso =
-        '${date.year.toString().padLeft(4, '0')}-'
+    final dateIso = '${date.year.toString().padLeft(4, '0')}-'
         '${date.month.toString().padLeft(2, '0')}-'
         '${date.day.toString().padLeft(2, '0')}';
     await ApiService.instance.post('upsert_nutrition_log.php', {
@@ -275,8 +236,6 @@ class NutritionService extends ChangeNotifier {
     });
     await _reloadHistory();
   }
-
-  // ── Notify helpers ─────────────────────────────────────────────────────────
 
   void _setLoading(bool v) {
     _loading = v;

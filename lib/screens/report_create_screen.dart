@@ -29,12 +29,10 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
   Farm? _farm;
   String _farmName = 'Farm';
 
-  // Analytics data
   List<Map<String, dynamic>> _telemetryHistory = [];
   List<Map<String, dynamic>> _alerts = [];
   List<FeedingLog> _feedingLogs = [];
 
-  // Aggregated stats
   double _totalFeedKg = 0;
   double _totalWaterL = 0;
   double _avgTemp = 0;
@@ -89,7 +87,6 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
 
       _calculateStats();
     } catch (e) {
-      print('ERROR [Reports]: Failed to load data: $e');
       if (!mounted) return;
       setState(() {
         _error = 'Failed to load data: $e';
@@ -99,12 +96,10 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
   }
 
   void _calculateStats() {
-    // Calculate feed/water totals
     final usage = FarmService.aggregateTodayUsage(_feedingLogs);
     _totalFeedKg = usage.feedKg;
     _totalWaterL = usage.waterL;
 
-    // Calculate average temperature and humidity
     if (_telemetryHistory.isNotEmpty) {
       double tempSum = 0;
       double humSum = 0;
@@ -150,7 +145,6 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
                   : ListView(
                       padding: const EdgeInsets.all(16),
                       children: [
-                        // Summary Cards
                         Text(
                           'Today\'s Summary',
                           style: TextStyle(
@@ -280,8 +274,6 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
                           ],
                         ),
                         const SizedBox(height: 18),
-
-                        // Recent Alerts
                         Text(
                           'Recent Alerts',
                           style: TextStyle(
@@ -349,8 +341,6 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
                             );
                           }),
                         const SizedBox(height: 18),
-
-                        // Environment Trends
                         Text(
                           'Environment Trends',
                           style: TextStyle(
@@ -385,8 +375,6 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
                           ),
                         ),
                         const SizedBox(height: 18),
-
-                        // Data Source Info
                         FarmoraCard(
                           padding: const EdgeInsets.all(12),
                           child: Row(

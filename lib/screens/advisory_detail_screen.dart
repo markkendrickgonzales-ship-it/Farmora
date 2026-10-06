@@ -7,9 +7,6 @@ import '../widgets/screen_header.dart';
 import '../widgets/status_badge.dart';
 import '../widgets/primary_button.dart';
 
-/// Full-screen detail view for one row of `farming_advisories`.
-/// Pushed on top of the advisory list via [SlideFadeRoute] and wrapped in a
-/// [PopScope] so the system back gesture also re-syncs the shell's state.
 class AdvisoryDetailScreen extends StatelessWidget {
   final Map<String, dynamic> advisory;
   final VoidCallback onBack;
@@ -20,7 +17,6 @@ class AdvisoryDetailScreen extends StatelessWidget {
     required this.onBack,
   });
 
-  // ── Flexible schema helpers (column names may vary) ──────────────────
   static String titleOf(Map<String, dynamic> a) =>
       (a['title'] ?? a['name'] ?? 'Untitled advisory').toString();
 
@@ -30,23 +26,19 @@ class AdvisoryDetailScreen extends StatelessWidget {
   static String situationOf(Map<String, dynamic> a) =>
       (a['situation'] ?? a['description'] ?? a['summary'] ?? '').toString();
 
-  /// Returns the external resource URL, or null when the advisory has no
-  /// usable `resource_link` (also tolerates `link` / `url` / `resource_url`
-  /// column names).
   static String? resourceLinkOf(Map<String, dynamic> a) {
     final raw =
         a['resource_link'] ?? a['link'] ?? a['url'] ?? a['resource_url'];
     if (raw == null) return null;
     var link = raw.toString().trim();
     if (link.isEmpty) return null;
-    // Normalize bare "www.example.com" values so launching works.
+
     if (!link.startsWith(RegExp(r'^https?://', caseSensitive: false))) {
       link = 'https://$link';
     }
     return Uri.tryParse(link)?.hasAbsolutePath ?? false ? link : null;
   }
 
-  /// Opens [link] in the device browser; surfaces a snackbar on failure.
   static Future<void> _launchLink(BuildContext context, String link) async {
     final uri = Uri.parse(link);
     try {
@@ -65,14 +57,10 @@ class AdvisoryDetailScreen extends StatelessWidget {
     }
   }
 
-  /// Pulls the step-by-step instructions from whichever column holds them:
-  /// a JSON/list `steps` array first, then long-text fallbacks split into
-  /// numbered steps by line breaks.
   static List<String> stepsOf(Map<String, dynamic> a) {
     final raw = a['steps'] ?? a['instructions'] ?? a['step_by_step'];
     if (raw == null) return const [];
 
-    // Steps stored as a JSON string or native list of strings.
     List? list;
     if (raw is List) {
       list = raw;
@@ -83,11 +71,9 @@ class AdvisoryDetailScreen extends StatelessWidget {
         final decoded = jsonDecode(text);
         list = decoded is List ? decoded : null;
         if (list == null) {
-          // JSON string without newlines: treat as a single step.
           return [text];
         }
       } catch (_) {
-        // Not JSON: split plain text into steps on newlines.
         return text
             .split(RegExp(r'\n+'))
             .map((s) => s.replaceFirst(RegExp(r'^\s*\d+[.)\-:]\s*'), '').trim())
@@ -108,8 +94,6 @@ class AdvisoryDetailScreen extends StatelessWidget {
     final resourceLink = resourceLinkOf(advisory);
 
     return PopScope(
-      // The detail screen is always pushed as a route, so system back just
-      // pops it; onBack re-syncs the shell state when the pop is blocked.
       canPop: Navigator.of(context).canPop(),
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) onBack();
@@ -249,8 +233,6 @@ class AdvisoryDetailScreen extends StatelessWidget {
                           ),
                         );
                       }),
-                    // External guide / video link from the `resource_link`
-                    // column, when present.
                     if (resourceLink != null) ...[
                       const SizedBox(height: 14),
                       Text(
@@ -286,7 +268,6 @@ class AdvisoryDetailScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                      // The raw URL as a clickable text link too.
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: GestureDetector(

@@ -47,11 +47,9 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
           _farmId = farms.first.id;
           _farmName = farms.first.name;
         });
-      } else {
-        print('ERROR [FarmLogInput]: No farms found');
       }
     } catch (e) {
-      print('ERROR [FarmLogInput]: Failed to load farm info: $e');
+      debugPrint('$e');
     }
   }
 
@@ -67,7 +65,6 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
         });
       }
     } catch (e) {
-      print('ERROR [FarmLogInput]: Failed to pick image from camera: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to capture image')),
@@ -88,7 +85,6 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
         });
       }
     } catch (e) {
-      print('ERROR [FarmLogInput]: Failed to pick image from gallery: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to select image')),
@@ -119,7 +115,6 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
         throw Exception('Please enter a valid amount greater than 0');
       }
 
-      // Use the service method for better validation and error handling
       await FarmService.insertFeedingLog(
         farmId: _farmId!,
         actionType: _actionType,
@@ -135,7 +130,7 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
           _loading = false;
           _submitted = true;
         });
-        // Show success message
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Log submitted successfully'),
@@ -143,11 +138,10 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
             duration: Duration(seconds: 2),
           ),
         );
-        // Trigger refresh callback
+
         widget.onSubmitted?.call();
       }
     } catch (e) {
-      print('ERROR [FarmLogInput]: Failed to submit log: $e');
       if (mounted) {
         setState(() => _loading = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -438,7 +432,7 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
                           children: [
                             Icon(Icons.camera_alt,
                                 size: 24, color: FarmoraColors.brand),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text('Camera',
                                 style: TextStyle(
                                     fontSize: 12, color: FarmoraColors.ink)),
@@ -455,7 +449,7 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
                           children: [
                             Icon(Icons.photo_library,
                                 size: 24, color: FarmoraColors.brand),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text('Gallery',
                                 style: TextStyle(
                                     fontSize: 12, color: FarmoraColors.ink)),

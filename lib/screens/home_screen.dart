@@ -24,7 +24,6 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _irrigation = false;
   bool _light = true;
 
-  // ── Data ──────────────────────────────────────────────────────────────
   bool _loading = true;
   String? _error;
   Map<String, dynamic>? _telemetry;
@@ -44,7 +43,6 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
 
       if (farms.isEmpty) {
-        print('ERROR [HomeScreen]: fetchFarms returned an empty list');
         setState(() {
           _loading = false;
           _error = 'No farms found for this account.';
@@ -63,15 +61,9 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
 
       if (results[0] == null) {
-        print(
-            'ERROR [HomeScreen]: fetchLatestTelemetry returned null / empty array []');
-      } else {
-        print('DEBUG [HomeScreen]: fetchLatestTelemetry succeeded');
-      }
+      } else {}
 
-      if ((results[1] as List).isEmpty) {
-        print('ERROR [HomeScreen]: fetchRecentAlerts returned empty array []');
-      }
+      if ((results[1] as List).isEmpty) {}
 
       setState(() {
         _telemetry = results[0] as Map<String, dynamic>?;
@@ -79,7 +71,6 @@ class _HomeScreenState extends State<HomeScreen> {
         _loading = false;
       });
     } catch (e) {
-      print('ERROR [HomeScreen]: Failed to fetch data: $e');
       if (!mounted) return;
       setState(() {
         _error = 'Failed to load data: $e';
@@ -88,13 +79,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // ── Telemetry helpers ─────────────────────────────────────────────────
   String _temp() {
     final v = _telemetry?['temperature_c'];
-    if (v == null) {
-      print(
-          'ERROR [HomeScreen]: temperature_c field is null in telemetry data');
-    }
+    if (v == null) {}
     if (v == null) return '--';
     final numVal = (v as num?)?.toDouble();
     return numVal != null ? numVal.toStringAsFixed(1) : '--';
@@ -102,10 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String _humidity() {
     final v = _telemetry?['humidity_percent'];
-    if (v == null) {
-      print(
-          'ERROR [HomeScreen]: humidity_percent field is null in telemetry data');
-    }
+    if (v == null) {}
     if (v == null) return '--';
     final numVal = (v as num?)?.toDouble();
     return numVal != null ? numVal.toStringAsFixed(1) : '--';
@@ -113,10 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String _power() {
     final v = _telemetry?['power_load_kw'];
-    if (v == null) {
-      print(
-          'ERROR [HomeScreen]: power_load_kw field is null in telemetry data');
-    }
+    if (v == null) {}
     if (v == null) return '--';
     final numVal = (v as num?)?.toDouble();
     return numVal != null ? numVal.toStringAsFixed(1) : '--';
@@ -124,15 +105,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String _ammonia() {
     final v = _telemetry?['ammonia_ppm'];
-    if (v == null) {
-      print('ERROR [HomeScreen]: ammonia_ppm field is null in telemetry data');
-    }
+    if (v == null) {}
     if (v == null) return '--';
     final numVal = (v as num?)?.toDouble();
     return numVal != null ? numVal.toStringAsFixed(1) : '--';
   }
 
-  // ── Alert helpers ─────────────────────────────────────────────────────
   Color _severityColor(String severity) {
     switch (severity.toLowerCase()) {
       case 'critical':
@@ -234,7 +212,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   : ListView(
                       padding: const EdgeInsets.all(16),
                       children: [
-                        // Live Telemetry
                         Text(
                           'Live telemetry',
                           style: TextStyle(
@@ -282,8 +259,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                         ),
                         const SizedBox(height: 18),
-
-                        // Uploads Section
                         Text(
                           'Uploads',
                           style: TextStyle(
@@ -313,14 +288,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                         const SizedBox(height: 18),
-
-                        // Advisory & Guides entry
                         _AdvisoryBannerCard(
                           onTap: () => widget.go('advisoryList'),
                         ),
                         const SizedBox(height: 18),
-
-                        // Active Alerts
                         Text(
                           'Active alerts',
                           style: TextStyle(
@@ -342,8 +313,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 _formatAlertTime(a['created_at'] as String?);
                             final type =
                                 (a['alert_type'] as String? ?? 'Alert');
-                            print(
-                                'DEBUG [HomeScreen]: Rendering alert - severity: $sev, type: $type, time: $time');
                             return Padding(
                               padding: const EdgeInsets.only(top: 8),
                               child: _AlertCard(
@@ -374,8 +343,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ],
                         const SizedBox(height: 18),
-
-                        // Actuators
                         Text(
                           'Environment actuators',
                           style: TextStyle(
@@ -419,8 +386,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(height: 18),
-
-                        // Recent telemetry log preview
                         Text(
                           'Recent readings',
                           style: TextStyle(
@@ -616,7 +581,6 @@ class _ActuatorRow extends StatelessWidget {
   }
 }
 
-/// Prominent dashboard entry point to the Advisory & Guides library.
 class _AdvisoryBannerCard extends StatelessWidget {
   final VoidCallback onTap;
 
