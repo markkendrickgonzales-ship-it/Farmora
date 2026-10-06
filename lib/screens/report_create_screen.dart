@@ -4,6 +4,8 @@ import '../widgets/farmora_card.dart';
 import '../widgets/screen_header.dart';
 import '../widgets/status_badge.dart';
 import '../services/farm_service.dart';
+import '../models/farm.dart';
+import '../models/feeding_log.dart';
 
 class ReportCreateScreen extends StatefulWidget {
   final ValueChanged<String> go;
@@ -24,13 +26,13 @@ class ReportCreateScreen extends StatefulWidget {
 class _ReportCreateScreenState extends State<ReportCreateScreen> {
   bool _loading = true;
   String? _error;
-  String? _farmId;
+  Farm? _farm;
   String _farmName = 'Farm';
 
   // Analytics data
   List<Map<String, dynamic>> _telemetryHistory = [];
   List<Map<String, dynamic>> _alerts = [];
-  List<Map<String, dynamic>> _feedingLogs = [];
+  List<FeedingLog> _feedingLogs = [];
 
   // Aggregated stats
   double _totalFeedKg = 0;
@@ -67,21 +69,21 @@ class _ReportCreateScreenState extends State<ReportCreateScreen> {
         return;
       }
 
-      _farmId = farms.first['farm_id']?.toString() ?? '';
-      _farmName = farms.first['farm_name'] as String? ?? 'Farm';
+      _farm = farms.first;
+      _farmName = _farm!.name;
 
-      final results = await Future.wait([
-        FarmService.fetchTelemetryHistory(_farmId!, limit: 50),
-        FarmService.fetchRecentAlerts(_farmId!, limit: 20),
-        FarmService.fetchFeedingLogs(_farmId!, limit: 100),
+      final results = await Future.wait<dynamic>([
+        FarmService.fetchTelemetryHistory(_farm!.id, limit: 50),
+        FarmService.fetchRecentAlerts(_farm!.id, limit: 20),
+        FarmService.fetchFeedingLogs(_farm!.id, limit: 100),
       ]);
 
       if (!mounted) return;
 
       setState(() {
-        _telemetryHistory = results[0];
-        _alerts = results[1];
-        _feedingLogs = results[2];
+        _telemetryHistory = results[0] as List<Map<String, dynamic>>;
+        _alerts = results[1] as List<Map<String, dynamic>>;
+        _feedingLogs = results[2] as List<FeedingLog>;
         _loading = false;
       });
 

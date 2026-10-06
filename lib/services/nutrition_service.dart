@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
-import 'supabase_client.dart';
+import 'api_service.dart';
 
 // ── Safe JSON cast helpers ─────────────────────────────────────────────────
-// Supabase can return numeric/id columns as int, num or String depending on
-// the underlying type, so every value read from a response row is normalised
-// here instead of being force-cast (see the vitamin_logs int/String lesson).
+// The PHP/MySQL backend can return numeric/id columns as int, num or String
+// depending on the underlying type, so every value read from a response row
+// is normalised here instead of being force-cast.
 num? _asNum(dynamic v) {
   if (v is num) return v;
   if (v is String) return num.tryParse(v);
@@ -112,13 +112,13 @@ class BatchNutritionState {
       '${currentPhase.name} phase · Day $currentDay of $programLength';
 }
 
-/// Supabase-backed feed-program + nutrition-history store.
+/// Hostinger PHP/MySQL-backed feed-program + nutrition-history store.
 ///
 /// Replaces the former hardcoded demo data. It is a [ChangeNotifier] singleton
 /// so the Nutrition screens refresh live once [ensureLoaded] resolves the
 /// active batch, its phases and its history. Every query is scoped to the
-/// signed-in user (via the active batch, which is itself owner-scoped, plus the
-/// RLS policies from migration 0003).
+/// signed-in user server-side: the PHP endpoint resolves the batch through the
+/// bearer token's owner id.
 class NutritionService extends ChangeNotifier {
   NutritionService._();
 
@@ -169,8 +169,7 @@ class NutritionService extends ChangeNotifier {
     _setLoading(true);
     _error = null;
     try {
-      await _resolveBatchContext();
-      await Future.wait([_loadPhases(), _loadHistory()]);
+      await _loadProgram();
       _loaded = true;
     } catch (e) {
       print('DEBUG: NutritionService.load error = $e');
@@ -194,123 +193,64 @@ class NutritionService extends ChangeNotifier {
     _notify();
   }
 
-  // ── Batch / day resolution ────────────────────────────────────────────────
+  // ── Program fetch ───────────────────────────────────────────────────────
+  //
+  // get_feed_program.php resolves everything this store needs in one round
+  // trip: the caller's most-recent batch (id + start_date), the batch's feed
+  // phases (falling back to the shared templates server-side) and the last
+  // 7 days of nutrition history.
 
-  /// Finds the caller's most-recent batch (id + start_date) and derives the
-  /// day-within-cycle. When no `batches` row exists the day stays 1 and reads
-  /// fall back to shared templates, so the screen still renders with real
-  /// (non-demo) phase data.
-  Future<void> _resolveBatchContext() async {
-    final userId = supabase.auth.currentUser?.id;
-    try {
-      dynamic query = supabase
-          .from('batches')
-          .select('id, start_date, flock_size')
-          .order('start_date', ascending: false)
-          .limit(1);
-      if (userId != null) query = query.eq('owner_id', userId);
-      final rows = await query;
-      final list = List<Map<String, dynamic>>.from(rows as List);
-      if (list.isNotEmpty) {
-        final batch = list.first;
-        _batchId = _asStr(batch['id']);
-        final start = DateTime.tryParse(_asStr(batch['start_date']) ?? '');
-        if (start != null) {
-          final now = DateTime.now();
-          final days = DateTime(now.year, now.month, now.day)
-                  .difference(DateTime(start.year, start.month, start.day))
-                  .inDays +
-              1;
-          _currentDay = days < 1 ? 1 : days;
-        }
+  Future<void> _loadProgram() async {
+    final data = await ApiService.instance.get('get_feed_program.php');
+    final map = Map<String, dynamic>.from(data as Map);
+
+    final batch = map['batch'];
+    if (batch is Map) {
+      _batchId = _asStr(batch['id']);
+      final start = DateTime.tryParse(_asStr(batch['start_date']) ?? '');
+      if (start != null) {
+        final now = DateTime.now();
+        final days = DateTime(now.year, now.month, now.day)
+                .difference(DateTime(start.year, start.month, start.day))
+                .inDays +
+            1;
+        _currentDay = days < 1 ? 1 : days;
       }
-    } catch (e) {
-      // batches table may be absent / column missing — degrade gracefully.
-      print('DEBUG: NutritionService._resolveBatchContext skipped = $e');
+    } else {
+      // No batches row for this user — day stays 1 and shared template
+      // phases are what the backend returned, so the screen still renders
+      // with real (non-demo) data.
       _batchId = null;
       _currentDay = 1;
     }
-  }
 
-  // ── Feed phases ────────────────────────────────────────────────────────────
+    _phases = (map['phases'] as List? ?? [])
+        .map((r) => FeedPhase.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+    _history = (map['history'] as List? ?? [])
+        .map((r) => NutritionReading.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
 
-  Future<void> _loadPhases() async {
-    try {
-      List<FeedPhase> phases = const [];
-      // 1. Batch-specific phases for the active batch (if any).
-      final batchId = _batchId;
-      if (batchId != null) {
-        final rows = await supabase
-            .from('feed_phases')
-            .select()
-            .eq('batch_id', batchId)
-            .order('start_day', ascending: true);
-        phases = (rows as List)
-            .map((r) => FeedPhase.fromRow(Map<String, dynamic>.from(r)))
-            .toList();
-      }
-      // 2. Fall back to the shared templates (batch_id IS NULL). RLS exposes
-      //    these to every authenticated user.
-      if (phases.isEmpty) {
-        final rows = await supabase
-            .from('feed_phases')
-            .select()
-            .isFilter('batch_id', null)
-            .order('start_day', ascending: true);
-        phases = (rows as List)
-            .map((r) => FeedPhase.fromRow(Map<String, dynamic>.from(r)))
-            .toList();
-      }
-      _phases = phases;
-      if (phases.isNotEmpty) {
-        _programLength = phases.last.endDay;
-        // Keep the current day within the program length.
-        if (_currentDay > _programLength) _currentDay = _programLength;
-      }
-    } catch (e) {
-      print('DEBUG: NutritionService._loadPhases error = $e');
-      _phases = const [];
+    if (_phases.isNotEmpty) {
+      _programLength = _phases.last.endDay;
+      // Keep the current day within the program length.
+      if (_currentDay > _programLength) _currentDay = _programLength;
     }
     _notify();
   }
 
-  // ── Nutrition history (last 7 days) ────────────────────────────────────────
-
-  Future<void> _loadHistory() async {
-    if (_batchId == null) {
-      _history = const [];
-      _notify();
-      return;
-    }
+  Future<void> _reloadHistory() async {
     try {
-      final since = DateTime.now().subtract(const Duration(days: 6));
-      final sinceIso =
-          '${since.year.toString().padLeft(4, '0')}-'
-          '${since.month.toString().padLeft(2, '0')}-'
-          '${since.day.toString().padLeft(2, '0')}';
-      final batchId = _batchId!;
-      final rows = await supabase
-          .from('nutrition_logs')
-          .select()
-          .eq('batch_id', batchId)
-          .gte('log_date', sinceIso)
-          .order('log_date', ascending: true);
-      final list = (rows as List)
-          .map((r) => NutritionReading.fromRow(Map<String, dynamic>.from(r)))
-          .toList();
-      _history = list;
+      await _loadProgram();
     } catch (e) {
-      print('DEBUG: NutritionService._loadHistory error = $e');
-      _history = const [];
+      print('DEBUG: NutritionService._reloadHistory error = $e');
     }
-    _notify();
   }
 
-  // ── Write (owner-scoped) ─────────────────────────────────────────────────
+  // ── Write ───────────────────────────────────────────────────────────────
 
-  /// Inserts or updates one daily reading for the active batch. Stamps
-  /// `owner_id` with the signed-in user so the row is isolated to them (RLS
-  /// insert policy in migration 0003 also enforces this).
+  /// Inserts or updates one daily reading for the active batch through
+  /// upsert_nutrition_log.php, which stamps the row with the token's user id.
   Future<void> upsertDailyReading({
     required DateTime date,
     required double intakeG,
@@ -321,21 +261,19 @@ class NutritionService extends ChangeNotifier {
     if (_batchId == null) {
       throw Exception('No active batch to record nutrition against.');
     }
-    final userId = supabase.auth.currentUser?.id;
     final dateIso =
         '${date.year.toString().padLeft(4, '0')}-'
         '${date.month.toString().padLeft(2, '0')}-'
         '${date.day.toString().padLeft(2, '0')}';
-    await supabase.from('nutrition_logs').upsert({
-      'batch_id': _batchId,
-      'owner_id': userId,
+    await ApiService.instance.post('upsert_nutrition_log.php', {
+      'batch_id': int.tryParse(_batchId!) ?? _batchId,
       'log_date': dateIso,
       'feed_intake_g': intakeG,
       'body_weight_kg': bodyWeightKg,
       'fcr': fcr,
       'notes': (notes != null && notes.trim().isNotEmpty) ? notes.trim() : null,
-    }, onConflict: 'batch_id,log_date');
-    await _loadHistory();
+    });
+    await _reloadHistory();
   }
 
   // ── Notify helpers ─────────────────────────────────────────────────────────

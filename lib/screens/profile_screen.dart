@@ -5,7 +5,7 @@ import '../widgets/farmora_card.dart';
 import '../widgets/status_badge.dart';
 import '../widgets/primary_button.dart';
 import '../services/farm_service.dart';
-import '../services/supabase_client.dart';
+import '../services/auth_service.dart';
 import '../utils/app_route.dart';
 import 'edit_profile_screen.dart';
 
@@ -56,7 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         EditProfileScreen(profile: _profile),
       ),
     );
-    // Refresh from Supabase if the edit screen reported a save.
+    // Refresh from the backend if the edit screen reported a save.
     if (updated == true) await _loadProfile();
   }
 
@@ -111,7 +111,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () async {
               Navigator.pop(ctx);
               try {
-                await supabase.auth.resetPasswordForEmail(email);
+                await AuthService.instance.requestPasswordReset();
                 if (ctx.mounted) {
                   ScaffoldMessenger.of(ctx).showSnackBar(
                     SnackBar(content: Text('Reset link sent to $email')),
@@ -201,7 +201,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           const SizedBox(width: 4),
                           Text((p?.emailConfirmed ?? false)
-                              ? 'VERIFIED · ${p?.userId.substring(0, 4).toUpperCase() ?? ''}'
+                              ? 'VERIFIED · ${(p?.userId ?? '').toUpperCase()}'
                               : 'EMAIL NOT VERIFIED'),
                         ],
                       ),

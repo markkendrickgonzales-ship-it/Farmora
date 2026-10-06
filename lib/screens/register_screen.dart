@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_theme.dart';
 import '../widgets/screen_header.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/primary_button.dart';
 import '../widgets/farmora_logo.dart';
-import '../services/supabase_client.dart';
+import '../services/api_service.dart';
+import '../services/auth_service.dart';
 
 /// Dedicated sign-up screen, pushed as a full-screen route from the Login
 /// screen (breadcrumb-free; reached via "Create account"). Wired directly to
-/// Supabase Auth via [supabase]. Back returns to Login.
+/// the Hostinger PHP auth backend via [AuthService]. Back returns to Login.
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -59,29 +59,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      final res = await Supabase.instance.client
-          .auth
-          .signUp(email: email, password: password);
+      await AuthService.instance.register(email: email, password: password);
 
       if (!mounted) return;
 
-      if (res.session != null) {
-        // Email confirmation is disabled: the user is signed in immediately.
-        // Pop back to the shell, whose auth listener has already routed home.
-        Navigator.of(context).popUntil((route) => route.isFirst);
-      } else {
-        // Confirmation required — return to Login with guidance.
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content:
-                Text('Account created. Check $email to confirm, then sign in.'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 4),
-          ),
-        );
-        Navigator.of(context).pop();
-      }
-    } on AuthException catch (e) {
+      // register.php signs the new account in immediately, so MainShell's
+      // auth listener has already routed to home; just dismiss this route.
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    } on ApiException catch (e) {
       if (mounted) setState(() => _errorMsg = e.message);
     } catch (e) {
       if (mounted) setState(() => _errorMsg = 'Unexpected error: $e');

@@ -24,7 +24,7 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
   final TextEditingController _notesCtrl = TextEditingController();
   bool _submitted = false;
   bool _uploading = false;
-  String? _farmId;
+  int? _farmId;
   String _farmName = 'Farm';
   String? _imagePath;
 
@@ -45,15 +45,14 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
 
   Future<void> _loadFarmInfo() async {
     try {
-      // Use telemetry farms to get UUID farm_ids for reports
-      final telemetryFarms = await FarmService.fetchTelemetryFarms();
-      if (telemetryFarms.isNotEmpty) {
+      final farms = await FarmService.fetchFarms();
+      if (farms.isNotEmpty) {
         setState(() {
-          _farmId = telemetryFarms.first['farm_id']?.toString();
-          _farmName = 'Telemetry Farm'; // No farm name in telemetry data
+          _farmId = farms.first.id;
+          _farmName = farms.first.name;
         });
       } else {
-        print('ERROR [ReportUpload]: No telemetry farms found');
+        print('ERROR [ReportUpload]: No farms found');
       }
     } catch (e) {
       print('ERROR [ReportUpload]: Failed to load farm info: $e');
@@ -108,14 +107,6 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
     });
   }
 
-  void _selectFile() {
-    // File upload functionality temporarily disabled due to schema uncertainty
-    // TODO: Re-enable once database schema for file storage is confirmed
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('File upload temporarily disabled')),
-    );
-  }
-
   Future<void> _uploadReport() async {
     if (_title.isEmpty || _farmId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -127,20 +118,14 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
     setState(() => _uploading = true);
 
     try {
-      // Include image path in notes for now (will be properly stored when file storage is implemented)
-      String enhancedNotes = _notes;
-      if (_imagePath != null) {
-        enhancedNotes = _notes.isEmpty
-            ? 'Image attached: ${_imagePath!.split('/').last}'
-            : '$_notes\n\nImage attached: ${_imagePath!.split('/').last}';
-      }
-
-      // Use the service method for database insert
+      // Upload through FarmService: the photo (if picked) goes to
+      // upload_file.php first, then add_report.php stores its URL.
       await FarmService.insertReport(
         farmId: _farmId!,
         title: _title,
         category: _category,
-        notes: enhancedNotes,
+        notes: _notes,
+        filePath: _imagePath,
       );
 
       if (mounted) {
@@ -455,7 +440,7 @@ class _ReportUploadScreenState extends State<ReportUploadScreen> {
                 padding: const EdgeInsets.all(12),
                 border: Border.all(color: Colors.transparent),
                 child: Text(
-                  'Automatic metadata\nTimestamp and farm ID will be attached automatically upon upload.',
+                  'Automatic metadata\nReport for $_farmName — timestamp and farm ID will be attached automatically upon upload.',
                   style: TextStyle(
                       fontSize: 11, color: FarmoraColors.inkSoft, height: 1.6),
                 ),

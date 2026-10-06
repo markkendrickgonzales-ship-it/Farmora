@@ -27,7 +27,7 @@ class _ResourceMonitoringScreenState extends State<ResourceMonitoringScreen> {
   // ── Live data ─────────────────────────────────────────────────────────
   bool _loading = true;
   String? _error;
-  String? _farmId;
+  int? _farmId;
   double _totalFeedKg = 0;
   double _totalWaterL = 0;
 
@@ -51,7 +51,7 @@ class _ResourceMonitoringScreenState extends State<ResourceMonitoringScreen> {
         });
         return;
       }
-      _farmId = farms.first['farm_id']?.toString() ?? '';
+      _farmId = farms.first.id;
       final logs = await FarmService.fetchFeedingLogs(_farmId!);
       if (!mounted) return;
       final totals = FarmService.aggregateTodayUsage(logs);

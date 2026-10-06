@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'supabase_client.dart';
-import 'farm_service.dart';
+import 'api_service.dart';
 import 'nutrition_service.dart';
 
 // ── Safe JSON cast helpers ─────────────────────────────────────────────────
-// Supabase (esp. over the web/PostgREST layer) can return an id or numeric
-// column as an `int`, `num` or `String` depending on the underlying column
-// type. Casting those straight to `String?` with `as String?` throws
+// The PHP/MySQL backend can return an id or numeric column as an `int`,
+// `num` or `String` depending on the underlying column type. Casting those
+// straight to `String?` with `as String?` throws
 // "type 'int' is not a subtype of type 'String?'". Every value read from a
 // response row goes through one of these helpers instead.
 
@@ -27,13 +26,6 @@ bool _asBool(dynamic v) {
   if (v is num) return v != 0;
   if (v is String) return v == 'true' || v == 't' || v == '1';
   return false;
-}
-
-/// Sends an id back to Postgres with the right type: integers stay integers,
-/// UUIDs / anything else stay strings.
-dynamic _idForPayload(String? id) {
-  if (id == null) return null;
-  return int.tryParse(id) ?? id;
 }
 
 /// A suggested vitamin/additive row from the `vitamin_catalog` table, used to
@@ -133,8 +125,8 @@ class VitaminLogEntry {
   }
 }
 
-/// Supabase-backed store for the daily vitamin log, following the app's
-/// `supabase.from(...)` query style. It is a [ChangeNotifier] singleton so the
+/// Hostinger PHP/MySQL-backed store for the daily vitamin log, talking to the
+/// backend through [ApiService]. It is a [ChangeNotifier] singleton so the
 /// parent Nutrition pill and the Vitamins screen refresh live after every
 /// insert / update / delete.
 class VitaminService extends ChangeNotifier {
@@ -191,8 +183,7 @@ class VitaminService extends ChangeNotifier {
     _setLoading(true);
     _error = null;
     try {
-      await _resolveBatchContext();
-      await Future.wait([_loadCatalog(), _loadTodayLogs()]);
+      await _fetchAll();
       _loaded = true;
     } catch (e) {
       print('DEBUG: VitaminService.load error = $e');
@@ -203,54 +194,56 @@ class VitaminService extends ChangeNotifier {
   }
 
   // ── Reads ───────────────────────────────────────────────────────────────
+  //
+  // vitamins.php answers with everything the daily-log screen needs in one
+  // round trip: { batch_id, day_number, catalog: [...], logs: [...] }. The
+  // batch context is resolved server-side from the bearer token's owner id
+  // (most-recent `batches` row, falling back to the user's newest farm), and
+  // `logs` only ever contains the caller's entries for today.
 
-  Future<void> _loadCatalog() async {
-    try {
-      final data = await supabase
-          .from('vitamin_catalog')
-          .select()
-          .order('is_default', ascending: false)
-          .order('name', ascending: true);
-      _catalog = (data as List)
-          .map((r) => VitaminCatalogItem.fromRow(Map<String, dynamic>.from(r)))
-          .toList();
-    } catch (e) {
-      // Catalog may be empty before the migration is applied — not fatal.
-      print('DEBUG: VitaminService._loadCatalog skipped = $e');
-      _catalog = const [];
-    }
-    _notify();
-  }
+  Future<void> _fetchAll() async {
+    final data = await ApiService.instance.get('vitamins.php');
+    final map = Map<String, dynamic>.from(data as Map);
 
-  Future<void> _loadTodayLogs() async {
-    if (_batchId == null || _batchId!.isEmpty) {
-      _todayLogs = const [];
-      _notify();
-      return;
-    }
-    try {
-      var query = supabase
-          .from('vitamin_logs_view')
-          .select()
-          .eq('batch_id', _idForPayload(_batchId))
-          .eq('log_date', _todayIso());
-      // Defence-in-depth on top of the vitamin_logs RLS SELECT policy: only
-      // this user's entries.
-      final userId = supabase.auth.currentUser?.id;
-      if (userId != null) query = query.eq('logged_by', userId);
-      final data = await query.order('time_given', ascending: false);
-      _todayLogs = (data as List)
-          .map((r) => VitaminLogEntry.fromRow(Map<String, dynamic>.from(r)))
-          .toList();
-    } catch (e) {
-      print('DEBUG: VitaminService._loadTodayLogs error = $e');
-      _todayLogs = const [];
-      rethrow;
-    }
+    _batchId = _asStr(map['batch_id']);
+    _dayNumber = _asNum(map['day_number'])?.toInt() ??
+        NutritionService.instance.currentDay;
+
+    _catalog = (map['catalog'] as List? ?? [])
+        .map((r) =>
+            VitaminCatalogItem.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+    _todayLogs = (map['logs'] as List? ?? [])
+        .map((r) => VitaminLogEntry.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
     _notify();
   }
 
   // ── Writes ──────────────────────────────────────────────────────────────
+
+  /// Builds the JSON payload shared by insert and update.
+  Map<String, dynamic> _logPayload({
+    String? vitaminId,
+    String? customName,
+    required double dosage,
+    required String unit,
+    required DateTime date,
+    required TimeOfDay time,
+    String? notes,
+  }) =>
+      <String, dynamic>{
+        'batch_id': int.tryParse(_batchId ?? '') ?? _batchId,
+        'vitamin_id': int.tryParse(vitaminId ?? '') ?? vitaminId,
+        'custom_name': (customName != null && customName.trim().isNotEmpty)
+            ? customName.trim()
+            : null,
+        'dosage': dosage,
+        'unit': unit,
+        'log_date': _isoDate(date),
+        'time_given': _isoTime(time),
+        'day_number': _dayNumber,
+        'notes': (notes != null && notes.trim().isNotEmpty) ? notes.trim() : null,
+      };
 
   Future<void> insertLog({
     String? vitaminId,
@@ -262,24 +255,18 @@ class VitaminService extends ChangeNotifier {
     String? notes,
   }) async {
     _requireBatch();
-    final user = supabase.auth.currentUser;
-    final payload = <String, dynamic>{
-      'batch_id': _idForPayload(_batchId),
-      'vitamin_id': _idForPayload(vitaminId),
-      'custom_name': (customName != null && customName.trim().isNotEmpty)
-          ? customName.trim()
-          : null,
-      'dosage': dosage,
-      'unit': unit,
-      'log_date': _isoDate(date),
-      'time_given': _isoTime(time),
-      'day_number': _dayNumber,
-      'notes': (notes != null && notes.trim().isNotEmpty) ? notes.trim() : null,
-      'logged_by': user?.id,
-    };
     try {
-      await supabase.from('vitamin_logs').insert(payload).select().single();
-      await _loadTodayLogs();
+      await ApiService.instance
+          .post('save_vitamin_log.php', _logPayload(
+        vitaminId: vitaminId,
+        customName: customName,
+        dosage: dosage,
+        unit: unit,
+        date: date,
+        time: time,
+        notes: notes,
+      ));
+      await _fetchAll();
     } catch (e) {
       print('DEBUG: VitaminService.insertLog error = $e');
       rethrow;
@@ -296,27 +283,20 @@ class VitaminService extends ChangeNotifier {
     required TimeOfDay time,
     String? notes,
   }) async {
-    final payload = <String, dynamic>{
-      'vitamin_id': _idForPayload(vitaminId),
-      'custom_name': (customName != null && customName.trim().isNotEmpty)
-          ? customName.trim()
-          : null,
-      'dosage': dosage,
-      'unit': unit,
-      'log_date': _isoDate(date),
-      'time_given': _isoTime(time),
-      'notes': (notes != null && notes.trim().isNotEmpty) ? notes.trim() : null,
-    };
     try {
-      final userId = supabase.auth.currentUser?.id;
-      var query = supabase
-          .from('vitamin_logs')
-          .update(payload)
-          .eq('id', _idForPayload(id));
-      // Never edit another user's row even if an id leaked (RLS also blocks).
-      if (userId != null) query = query.eq('logged_by', userId);
-      await query.select().single();
-      await _loadTodayLogs();
+      await ApiService.instance.post('save_vitamin_log.php', {
+        ..._logPayload(
+          vitaminId: vitaminId,
+          customName: customName,
+          dosage: dosage,
+          unit: unit,
+          date: date,
+          time: time,
+          notes: notes,
+        ),
+        'id': int.tryParse(id) ?? id,
+      });
+      await _fetchAll();
     } catch (e) {
       print('DEBUG: VitaminService.updateLog error = $e');
       rethrow;
@@ -325,67 +305,13 @@ class VitaminService extends ChangeNotifier {
 
   Future<void> deleteLog(String id) async {
     try {
-      final userId = supabase.auth.currentUser?.id;
-      var query =
-          supabase.from('vitamin_logs').delete().eq('id', _idForPayload(id));
-      if (userId != null) query = query.eq('logged_by', userId);
-      await query;
-      await _loadTodayLogs();
+      await ApiService.instance
+          .post('delete_vitamin_log.php', {'id': int.tryParse(id) ?? id});
+      await _fetchAll();
     } catch (e) {
       print('DEBUG: VitaminService.deleteLog error = $e');
       rethrow;
     }
-  }
-
-  // ── Batch / day resolution ────────────────────────────────────────────────
-
-  /// Resolves the active batch id and day-within-cycle number. Prefers a real
-  /// `batches` row (id + start_date); falls back to the telemetry farm id and
-  /// the feed-cycle day tracked by [NutritionService] so logging still works
-  /// in the current Farmora schema.
-  Future<void> _resolveBatchContext() async {
-    try {
-      final userId = supabase.auth.currentUser?.id;
-      // Filter (owner) before the transforms (order/limit): PostgREST forbids
-      // filtering once ordering has been applied. The builder is dynamic
-      // because the optional owner filter changes the chain type.
-      dynamic query = supabase.from('batches').select('id, start_date');
-      // Only pick a batch this user owns (batches.owner_id from migration
-      // 0002). If the column is absent the query throws and we fall through
-      // to the telemetry fallback below, exactly as before.
-      if (userId != null) query = query.eq('owner_id', userId);
-      final rows = await query.order('start_date', ascending: false).limit(1);
-      final list = List<Map<String, dynamic>>.from(rows as List);
-      if (list.isNotEmpty) {
-        _batchId = list.first['id']?.toString();
-        final start =
-            DateTime.tryParse(_asStr(list.first['start_date']) ?? '');
-        if (start != null) {
-          final now = DateTime.now();
-          final days = DateTime(now.year, now.month, now.day)
-              .difference(DateTime(start.year, start.month, start.day))
-              .inDays +
-              1;
-          _dayNumber = days.clamp(1, 45);
-          return;
-        }
-        _dayNumber = NutritionService.instance.currentDay;
-        return;
-      }
-    } catch (e) {
-      print('DEBUG: VitaminService batches lookup skipped = $e');
-    }
-
-    // Fallback: telemetry farm id + feed-cycle day.
-    try {
-      final farms = await FarmService.fetchTelemetryFarms();
-      if (farms.isNotEmpty) {
-        _batchId = farms.first['farm_id']?.toString();
-      }
-    } catch (e) {
-      print('DEBUG: VitaminService farm fallback skipped = $e');
-    }
-    _dayNumber = NutritionService.instance.currentDay;
   }
 
   void _requireBatch() {
@@ -395,8 +321,6 @@ class VitaminService extends ChangeNotifier {
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
-
-  String _todayIso() => _isoDate(DateTime.now());
 
   String _isoDate(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-'

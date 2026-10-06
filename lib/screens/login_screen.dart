@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/primary_button.dart';
 import '../widgets/farmora_logo.dart';
-import '../services/supabase_client.dart';
+import '../services/api_service.dart';
+import '../services/auth_service.dart';
 import '../utils/app_route.dart';
 import 'register_screen.dart';
 
@@ -47,10 +47,10 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await supabase.auth.signInWithPassword(email: email, password: password);
-      // Success is handled by MainShell's onAuthStateChange listener, which
+      await AuthService.instance.login(email: email, password: password);
+      // Success is handled by MainShell's AuthService listener, which
       // swaps the shell to the home screen.
-    } on AuthException catch (e) {
+    } on ApiException catch (e) {
       if (mounted) setState(() => _errorMsg = e.message);
     } catch (e) {
       if (mounted) setState(() => _errorMsg = 'Unexpected error: $e');
@@ -79,35 +79,39 @@ class _LoginScreenState extends State<LoginScreen> {
                 colors: [FarmoraColors.heroTop, FarmoraColors.heroBottom],
               ),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const FarmoraLogo(
-                  asset: 'assets/images/logo_login.png',
-                  size: 90,
-                  radius: 18,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Farmora',
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.w800,
-                    color: FarmoraColors.onHero,
-                    letterSpacing: -0.5,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const FarmoraLogo(
+                    asset: 'assets/images/logo_login.png',
+                    size: 90,
+                    radius: 18,
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Professional smart-farming management system',
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    color: FarmoraColors.onHeroSoft,
-                    height: 1.5,
+                  const SizedBox(height: 16),
+                  Text(
+                    'Farmora',
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w800,
+                      color: FarmoraColors.onHero,
+                      letterSpacing: -0.5,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 6),
+                  Text(
+                    'Professional smart-farming management system',
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      color: FarmoraColors.onHeroSoft,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

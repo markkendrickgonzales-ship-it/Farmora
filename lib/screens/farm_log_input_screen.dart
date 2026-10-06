@@ -25,7 +25,7 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
   final TextEditingController _notesCtrl = TextEditingController();
   bool _loading = false;
   bool _submitted = false;
-  String? _farmId;
+  int? _farmId;
   String _farmName = 'Farm';
   String? _imagePath;
 
@@ -41,15 +41,14 @@ class _FarmLogInputScreenState extends State<FarmLogInputScreen> {
 
   Future<void> _loadFarmInfo() async {
     try {
-      // Use telemetry farms to get UUID farm_ids for feeding_logs
-      final telemetryFarms = await FarmService.fetchTelemetryFarms();
-      if (telemetryFarms.isNotEmpty) {
+      final farms = await FarmService.fetchFarms();
+      if (farms.isNotEmpty) {
         setState(() {
-          _farmId = telemetryFarms.first['farm_id']?.toString();
-          _farmName = 'Telemetry Farm'; // No farm name in telemetry data
+          _farmId = farms.first.id;
+          _farmName = farms.first.name;
         });
       } else {
-        print('ERROR [FarmLogInput]: No telemetry farms found');
+        print('ERROR [FarmLogInput]: No farms found');
       }
     } catch (e) {
       print('ERROR [FarmLogInput]: Failed to load farm info: $e');

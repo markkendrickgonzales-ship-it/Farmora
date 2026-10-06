@@ -8,7 +8,7 @@ import '../services/farm_service.dart';
 import '../utils/app_route.dart';
 import 'advisory_detail_screen.dart';
 
-/// Lists every guide stored in the `farming_advisories` Supabase table.
+/// Lists every guide stored in the `farming_advisories` MySQL table.
 /// Tapping a card pushes [AdvisoryDetailScreen] with the 300ms slide route.
 class AdvisoryListScreen extends StatefulWidget {
   final ValueChanged<String> go;

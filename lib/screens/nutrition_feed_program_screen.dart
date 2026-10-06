@@ -11,7 +11,7 @@ import '../services/nutrition_service.dart';
 /// 7-day intake / FCR strip driven by real `nutrition_logs` readings.
 ///
 /// Listens to [NutritionService] so it repaints once the batch program and
-/// history load from Supabase.
+/// history load from the PHP backend.
 class NutritionFeedProgramScreen extends StatefulWidget {
   final ValueChanged<String> go;
 

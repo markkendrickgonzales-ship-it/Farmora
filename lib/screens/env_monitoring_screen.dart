@@ -26,7 +26,7 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
   bool _loading = true;
   String? _error;
   Map<String, dynamic>? _telemetry;
-  String? _farmId;
+  int? _farmId;
 
   @override
   void initState() {
@@ -47,7 +47,7 @@ class _EnvMonitoringScreenState extends State<EnvMonitoringScreen> {
         });
         return;
       }
-      _farmId = farms.first['farm_id']?.toString() ?? '';
+      _farmId = farms.first.id;
       final t = await FarmService.fetchLatestTelemetry(_farmId!);
       if (!mounted) return;
 

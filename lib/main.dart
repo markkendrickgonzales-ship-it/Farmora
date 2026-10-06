@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'theme/app_theme.dart';
 import 'widgets/bottom_nav.dart';
-import 'services/supabase_client.dart';
+import 'services/auth_service.dart';
 import 'utils/app_route.dart';
 
 import 'screens/login_screen.dart';
@@ -30,7 +29,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Restore the persisted light/dark choice before the first frame.
   await farmoraTheme.load();
-  await initSupabase();
+  // Load any session persisted by the Hostinger PHP auth flow.
+  await AuthService.instance.restore();
   runApp(const FarmoraApp());
 }
 
@@ -97,33 +97,44 @@ class _MainShellState extends State<MainShell> {
   void initState() {
     super.initState();
     _setupAuthListener();
+    // A restored session means the user lands straight on home.
+    _initialized = true;
+    if (AuthService.instance.isSignedIn) {
+      _screen = 'home';
+      _loadedUserId = AuthService.instance.userIdStr;
+    }
+  }
+
+  @override
+  void dispose() {
+    AuthService.instance.removeListener(_onAuthChanged);
+    super.dispose();
   }
 
   void _setupAuthListener() {
-    supabase.auth.onAuthStateChange.listen((data) {
-      final session = data.session;
-      final newUserId = session?.user.id;
-      if (!mounted) return;
+    AuthService.instance.addListener(_onAuthChanged);
+  }
 
-      // Clear cached per-user data whenever the account changes or the user
-      // signs out, so a fresh login never shows the previous user's records.
-      if (newUserId != _loadedUserId) {
-        VitaminService.instance.reset();
-        NutritionService.instance.reset();
-        _loadedUserId = newUserId;
+  void _onAuthChanged() {
+    final auth = AuthService.instance;
+    final newUserId = auth.isSignedIn ? auth.userIdStr : null;
+    if (!mounted) return;
+
+    // Clear cached per-user data whenever the account changes or the user
+    // signs out, so a fresh login never shows the previous user's records.
+    if (newUserId != _loadedUserId) {
+      VitaminService.instance.reset();
+      NutritionService.instance.reset();
+      _loadedUserId = newUserId;
+    }
+
+    setState(() {
+      if (auth.isSignedIn) {
+        // Always land on (or stay on) home for a newly authenticated user.
+        if (_screen == 'login') _screen = 'home';
+      } else {
+        _screen = 'login';
       }
-
-      setState(() {
-        if (session != null) {
-          // Always land on (or stay on) home for a newly authenticated user.
-          if (_screen == 'login' || data.event == AuthChangeEvent.signedIn) {
-            _screen = 'home';
-          }
-        } else {
-          _screen = 'login';
-        }
-        _initialized = true;
-      });
     });
   }
 
@@ -144,7 +155,7 @@ class _MainShellState extends State<MainShell> {
   }
 
   Future<void> _signOut() async {
-    await supabase.auth.signOut();
+    await AuthService.instance.logout();
     // Belt-and-braces: the auth listener also resets, but clear eagerly here
     // so cached data is gone before the sign-out frame paints.
     VitaminService.instance.reset();

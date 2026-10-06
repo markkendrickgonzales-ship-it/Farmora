@@ -28,9 +28,7 @@ class _HistoryLogScreenState extends State<HistoryLogScreen> {
 
   Future<void> _loadData() async {
     try {
-      // sensor_telemetry is keyed by a UUID farm_id, so use the telemetry
-      // farms rather than the `farms` table (whose farm_id can be an int).
-      final farms = await FarmService.fetchTelemetryFarms();
+      final farms = await FarmService.fetchFarms();
       if (!mounted) return;
       if (farms.isEmpty) {
         setState(() {
@@ -39,20 +37,11 @@ class _HistoryLogScreenState extends State<HistoryLogScreen> {
         });
         return;
       }
-      final farmId = farms.first['farm_id']?.toString() ?? '';
-      if (farmId.isEmpty) {
-        setState(() {
-          _loading = false;
-          _error = 'No farm id found.';
-        });
-        return;
-      }
+      final farm = farms.first;
 
       final results = await Future.wait([
-        FarmService.fetchTelemetryHistory(farmId, limit: 10),
-        // The alerts table is keyed by an integer farm id, which we don't
-        // hold here, so show the most recent alerts across all farms.
-        FarmService.fetchRecentAlertsAnyFarm(limit: 10),
+        FarmService.fetchTelemetryHistory(farm.id, limit: 10),
+        FarmService.fetchRecentAlerts(farm.id, limit: 10),
       ]);
 
       if (!mounted) return;

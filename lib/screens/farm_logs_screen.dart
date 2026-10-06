@@ -3,6 +3,8 @@ import '../theme/app_theme.dart';
 import '../widgets/farmora_card.dart';
 import '../widgets/screen_header.dart';
 import '../services/farm_service.dart';
+import '../models/farm.dart';
+import '../models/feeding_log.dart';
 
 class FarmLogsScreen extends StatefulWidget {
   final ValueChanged<String> go;
@@ -23,12 +25,11 @@ class FarmLogsScreen extends StatefulWidget {
 class _FarmLogsScreenState extends State<FarmLogsScreen> {
   bool _loading = true;
   String? _error;
-  List<Map<String, dynamic>> _farms = [];
-  List<Map<String, dynamic>> _logs = [];
-  final Map<String, List<Map<String, dynamic>>> _groupedLogs = {};
-  Map<String, List<Map<String, dynamic>>> _monthGroups = {};
+  List<Farm> _farms = [];
+  List<FeedingLog> _logs = [];
+  Map<String, List<FeedingLog>> _monthGroups = {};
   final Set<String> _expandedMonths = {};
-  String? _selectedFarmId;
+  int? _selectedFarmId;
   String _selectedFarmName = 'All Farms';
 
   @override
@@ -52,8 +53,7 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
 
   Future<void> _loadData() async {
     try {
-      // Use telemetry farms to get UUID farm_ids for feeding_logs
-      final farms = await FarmService.fetchTelemetryFarms();
+      final farms = await FarmService.fetchFarms();
       if (!mounted) return;
 
       setState(() {
@@ -62,9 +62,9 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
       });
 
       if (farms.isNotEmpty) {
-        _selectedFarmId = farms.first['farm_id']?.toString();
-        _selectedFarmName = 'Telemetry Farm'; // No farm name in telemetry data
-        await _loadLogs(_selectedFarmId!);
+        _selectedFarmId = farms.first.id;
+        _selectedFarmName = farms.first.name;
+        await _loadLogs(farms.first.id);
       } else {
         setState(() {
           _logs = [];
@@ -80,7 +80,7 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
     }
   }
 
-  Future<void> _loadLogs(String farmId) async {
+  Future<void> _loadLogs(int farmId) async {
     try {
       final logs = await FarmService.fetchFeedingLogs(farmId, limit: 100);
       if (!mounted) return;
@@ -101,30 +101,22 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
     }
   }
 
-  Map<String, List<Map<String, dynamic>>> _groupLogsByMonth(
-      List<Map<String, dynamic>> logs) {
-    final grouped = <String, List<Map<String, dynamic>>>{};
+  Map<String, List<FeedingLog>> _groupLogsByMonth(List<FeedingLog> logs) {
+    final grouped = <String, List<FeedingLog>>{};
 
     for (final log in logs) {
-      final actionTime = log['action_time'] as String?;
-      if (actionTime == null) continue;
-
-      final dateTime = DateTime.tryParse(actionTime);
-      if (dateTime == null) continue;
+      final dateTime = log.actionTime;
 
       // Create a month key (YYYY-MM format for sorting)
       final monthKey =
           '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}';
 
-      if (!grouped.containsKey(monthKey)) {
-        grouped[monthKey] = [];
-      }
-      grouped[monthKey]!.add(log);
+      grouped.putIfAbsent(monthKey, () => []).add(log);
     }
 
     // Sort months in descending order (newest first)
     final sortedKeys = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
-    final sortedGrouped = <String, List<Map<String, dynamic>>>{};
+    final sortedGrouped = <String, List<FeedingLog>>{};
 
     for (final key in sortedKeys) {
       sortedGrouped[key] = grouped[key]!;
@@ -169,17 +161,9 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
     });
   }
 
-  String _formatDate(String? iso) {
-    if (iso == null) return '';
-    final dt = DateTime.tryParse(iso);
-    if (dt == null) return iso;
-    return '${dt.month}/${dt.day}/${dt.year}';
-  }
+  String _formatDate(DateTime dt) => '${dt.month}/${dt.day}/${dt.year}';
 
-  String _formatTime(String? iso) {
-    if (iso == null) return '';
-    final dt = DateTime.tryParse(iso);
-    if (dt == null) return iso;
+  String _formatTime(DateTime dt) {
     final h = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
     final m = dt.minute.toString().padLeft(2, '0');
     final ampm = dt.hour < 12 ? 'AM' : 'PM';
@@ -187,14 +171,14 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
   }
 
   String _getActionIcon(String actionType) {
-    final type = (actionType as String? ?? '').toLowerCase();
+    final type = actionType.toLowerCase();
     if (type.contains('feed')) return '🌾';
     if (type.contains('water')) return '💧';
     return '📋';
   }
 
   Color _getActionColor(String actionType) {
-    final type = (actionType as String? ?? '').toLowerCase();
+    final type = actionType.toLowerCase();
     if (type.contains('feed')) return FarmoraColors.brand;
     if (type.contains('water')) return Colors.blue;
     return FarmoraColors.ink;
@@ -251,7 +235,7 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: DropdownButtonHideUnderline(
-                                    child: DropdownButton<String>(
+                                    child: DropdownButton<int>(
                                       value: _selectedFarmId,
                                       isExpanded: true,
                                       style: TextStyle(
@@ -259,23 +243,19 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
                                           color: FarmoraColors.ink),
                                       onChanged: (val) async {
                                         if (val != null) {
-                                          final farm = _farms.firstWhere(
-                                              (f) => f['farm_id'] == val);
+                                          final farm = _farms
+                                              .firstWhere((f) => f.id == val);
                                           setState(() {
                                             _selectedFarmId = val;
-                                            _selectedFarmName =
-                                                'Farm ${val.substring(0, 8)}';
+                                            _selectedFarmName = farm.name;
                                           });
                                           await _loadLogs(val);
                                         }
                                       },
                                       items: _farms.map((farm) {
-                                        final farmId =
-                                            farm['farm_id']?.toString();
                                         return DropdownMenuItem(
-                                          value: farmId,
-                                          child: Text(
-                                              'Farm ${farmId?.substring(0, 8) ?? 'Unknown'}'),
+                                          value: farm.id,
+                                          child: Text(farm.name),
                                         );
                                       }).toList(),
                                     ),
@@ -406,20 +386,6 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
                                         if (isExpanded) ...[
                                           const SizedBox(height: 12),
                                           ...logsForMonth.map((log) {
-                                            final actionType =
-                                                log['action_type'] as String? ??
-                                                    'Unknown';
-                                            final amount =
-                                                (log['amount'] as num?)
-                                                        ?.toDouble() ??
-                                                    0;
-                                            final unit =
-                                                log['unit'] as String? ?? '';
-                                            final actionTime =
-                                                log['action_time'] as String?;
-                                            final notes =
-                                                log['notes'] as String?;
-
                                             return Padding(
                                               padding: const EdgeInsets.only(
                                                   bottom: 10),
@@ -438,7 +404,8 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
                                                           decoration:
                                                               BoxDecoration(
                                                             color: _getActionColor(
-                                                                    actionType)
+                                                                    log
+                                                                        .actionType)
                                                                 .withOpacity(
                                                                     0.1),
                                                             borderRadius:
@@ -449,7 +416,8 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
                                                           child: Center(
                                                             child: Text(
                                                               _getActionIcon(
-                                                                  actionType),
+                                                                  log
+                                                                      .actionType),
                                                               style:
                                                                   const TextStyle(
                                                                       fontSize:
@@ -466,7 +434,7 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
                                                                     .start,
                                                             children: [
                                                               Text(
-                                                                actionType,
+                                                                log.actionType,
                                                                 style:
                                                                     TextStyle(
                                                                   fontSize:
@@ -482,7 +450,7 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
                                                               const SizedBox(
                                                                   height: 2),
                                                               Text(
-                                                                '${amount.toStringAsFixed(1)} $unit',
+                                                                '${log.amount.toStringAsFixed(1)} ${log.unit}',
                                                                 style:
                                                                     TextStyle(
                                                                   fontSize: 12,
@@ -499,8 +467,8 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
                                                                   .end,
                                                           children: [
                                                             Text(
-                                                              _formatDate(
-                                                                  actionTime),
+                                                              _formatDate(log
+                                                                  .actionTime),
                                                               style: TextStyle(
                                                                 fontSize: 11,
                                                                 fontWeight:
@@ -514,8 +482,8 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
                                                             const SizedBox(
                                                                 height: 2),
                                                             Text(
-                                                              _formatTime(
-                                                                  actionTime),
+                                                              _formatTime(log
+                                                                  .actionTime),
                                                               style: TextStyle(
                                                                 fontSize: 11,
                                                                 color:
@@ -527,33 +495,70 @@ class _FarmLogsScreenState extends State<FarmLogsScreen> {
                                                         ),
                                                       ],
                                                     ),
-                                                    if (notes != null &&
-                                                        notes.isNotEmpty) ...[
-                                                      const SizedBox(height: 8),
-                                                      Container(
+                                                    if (log.imageUrl != null)
+                                                      Padding(
                                                         padding:
                                                             const EdgeInsets
-                                                                .all(8),
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color: FarmoraColors
-                                                              .surfaceSunken,
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(6),
-                                                        ),
-                                                        child: Text(
-                                                          notes,
-                                                          style: TextStyle(
-                                                            fontSize: 11,
-                                                            color: FarmoraColors
-                                                                .inkSoft,
-                                                            fontStyle: FontStyle
-                                                                .italic,
-                                                          ),
+                                                                .only(top: 8),
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(
+                                                                Icons
+                                                                    .attach_file,
+                                                                size: 13,
+                                                                color: FarmoraColors
+                                                                    .inkSoft,
+                                                            ),
+                                                            const SizedBox(
+                                                                width: 4),
+                                                            Expanded(
+                                                              child: Text(
+                                                                log.imageUrl!,
+                                                                style: TextStyle(
+                                                                  fontSize:
+                                                                      10.5,
+                                                                  color: FarmoraColors
+                                                                      .inkSoft,
+                                                                ),
+                                                                maxLines: 1,
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis,
+                                                              ),
+                                                            ),
+                                                          ],
                                                         ),
                                                       ),
-                                                    ],
+                                                    if (log.notes != null &&
+                                                        log.notes!.isNotEmpty) ...
+                                                      [
+                                                        const SizedBox(
+                                                            height: 8),
+                                                        Container(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(8),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: FarmoraColors
+                                                                .surfaceSunken,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        6),
+                                                          ),
+                                                          child: Text(
+                                                            log.notes!,
+                                                            style: TextStyle(
+                                                              fontSize: 11,
+                                                              color: FarmoraColors
+                                                                  .inkSoft,
+                                                              fontStyle: FontStyle
+                                                                  .italic,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
                                                   ],
                                                 ),
                                               ),

@@ -7,6 +7,7 @@ import '../widgets/primary_button.dart';
 import '../widgets/top_bar.dart';
 import '../widgets/farmora_logo.dart';
 import '../services/farm_service.dart';
+import '../models/farm.dart';
 
 class HomeScreen extends StatefulWidget {
   final ValueChanged<String> go;
@@ -28,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _error;
   Map<String, dynamic>? _telemetry;
   List<Map<String, dynamic>> _alerts = [];
-  String _farmId = '';
+  Farm? _farm;
   String _farmName = 'Farm';
 
   @override
@@ -43,21 +44,20 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
 
       if (farms.isEmpty) {
-        print('ERROR [HomeScreen]: fetchFarms returned an empty array []');
+        print('ERROR [HomeScreen]: fetchFarms returned an empty list');
         setState(() {
           _loading = false;
-          _error = 'No farms found in database.';
+          _error = 'No farms found for this account.';
         });
         return;
       }
 
-      final firstFarm = farms.first;
-      _farmId = farms.first['farm_id']?.toString() ?? '';
-      _farmName = firstFarm['farm_name'] as String? ?? 'Farm';
+      _farm = farms.first;
+      _farmName = _farm!.name;
 
       final results = await Future.wait([
-        FarmService.fetchLatestTelemetry(_farmId),
-        FarmService.fetchRecentAlerts(_farmId, limit: 3),
+        FarmService.fetchLatestTelemetry(_farm!.id),
+        FarmService.fetchRecentAlerts(_farm!.id, limit: 3),
       ]);
 
       if (!mounted) return;

@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:farmora/main.dart';
+import 'package:farmora/services/auth_service.dart';
 import 'package:farmora/theme/app_theme.dart';
 
 void main() {
   setUpAll(() async {
-    // MainShell listens to Supabase auth on init, so the client must exist.
+    // MainShell restores its session from SharedPreferences on init, so the
+    // mock store must exist before the first frame.
     SharedPreferences.setMockInitialValues({});
-    await Supabase.initialize(
-      url: 'https://example.supabase.co',
-      publishableKey: 'sb_publishable_testing_only',
-    );
+    await AuthService.instance.restore();
   });
 
   tearDown(() => farmoraTheme.setDark(false));
