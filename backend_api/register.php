@@ -1,5 +1,6 @@
 <?php
 
+ob_start();
 require_once __DIR__ . '/db_connect.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
@@ -9,8 +10,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
 $body    = request_body();
 $email   = strtolower(trim($body['email'] ?? ''));
 $pass    = (string)($body['password'] ?? '');
-$fullNom = trim($body['full_name'] ?? '');
+$fullNom = trim((string)($body['full_name'] ?? ''));
 
+if ($fullNom === '') {
+    json_response(false, null, 'Please enter your full name.', 400);
+}
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     json_response(false, null, 'Please enter a valid email address.', 400);
 }
@@ -28,7 +32,7 @@ if ($stmt->fetch()) {
 $stmt = $pdo->prepare(
     'INSERT INTO users (email, password_hash, full_name) VALUES (?, ?, ?)'
 );
-$stmt->execute([$email, password_hash($pass, PASSWORD_DEFAULT), $fullNom]);
+$stmt->execute([$email, password_hash($pass, PASSWORD_BCRYPT), $fullNom]);
 $userId = (int)$pdo->lastInsertId();
 
 $stmt = $pdo->prepare(
@@ -37,8 +41,10 @@ $stmt = $pdo->prepare(
 $stmt->execute([$userId, 'My First Farm', '', 'Poultry']);
 
 json_response(true, [
-    'token'     => issue_token($userId),
-    'user_id'   => $userId,
-    'email'     => $email,
-    'full_name' => $fullNom,
+    'token' => issue_token($userId),
+    'user'  => [
+        'id'        => $userId,
+        'email'     => $email,
+        'full_name' => $fullNom,
+    ],
 ], 'Account created', 201);

@@ -1,5 +1,6 @@
 <?php
 
+ob_start();
 require_once __DIR__ . '/db_connect.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
@@ -25,8 +26,10 @@ if (!$user || !password_verify($pass, $user['password_hash'])) {
 }
 
 json_response(true, [
-    'token'     => issue_token((int)$user['id']),
-    'user_id'   => (int)$user['id'],
-    'email'     => $user['email'],
-    'full_name' => $user['full_name'],
+    'token' => issue_token((int)$user['id']),
+    'user'  => [
+        'id'        => (int)$user['id'],
+        'email'     => $user['email'],
+        'full_name' => $user['full_name'],
+    ],
 ]);

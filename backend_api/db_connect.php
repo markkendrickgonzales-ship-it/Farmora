@@ -1,5 +1,11 @@
 <?php
 
+ob_start();
+
+error_reporting(E_ALL);
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+
 if (is_file(__DIR__ . '/config.php')) {
     require_once __DIR__ . '/config.php';
 } else {
@@ -14,13 +20,16 @@ define('FILE_BASE_URL', 'https://frmora.space/api/uploads');
 
 define('TOKEN_TTL_SECONDS', 60 * 60 * 24 * 30);
 
-header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Content-Type: application/json; charset=UTF-8');
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
-    http_response_code(204);
-    exit;
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+    http_response_code(200);
+    exit();
 }
 
 function db(): PDO
@@ -46,9 +55,12 @@ function db(): PDO
 
 function json_response(bool $success, $data = null, ?string $message = null, int $status = 200): void
 {
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
     http_response_code($status);
     echo json_encode(['success' => $success, 'data' => $data, 'message' => $message]);
-    exit;
+    exit();
 }
 
 function request_body(): array
@@ -152,3 +164,4 @@ function batch_day_number(string $startDate): int
     $day = $today->diff($start)->days + 1;
     return min(max($day, 1), 45);
 }
+?>

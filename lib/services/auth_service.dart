@@ -92,9 +92,16 @@ class AuthService extends ChangeNotifier {
 
   Future<void> _saveSession(Map<String, dynamic> session) async {
     _token = session['token'] as String?;
-    _userId = (session['user_id'] as num?)?.toInt();
-    _email = session['email'] as String? ?? '';
-    _fullName = session['full_name'] as String? ?? '';
+    final user = session['user'];
+    if (user is Map) {
+      _userId = (user['id'] as num?)?.toInt();
+      _email = user['email'] as String? ?? '';
+      _fullName = user['full_name'] as String? ?? '';
+    } else {
+      _userId = (session['user_id'] as num?)?.toInt();
+      _email = session['email'] as String? ?? '';
+      _fullName = session['full_name'] as String? ?? '';
+    }
     final p = await _prefsStore();
     await p.setString(_kToken, _token ?? '');
     await p.setInt(_kUserId, _userId ?? 0);

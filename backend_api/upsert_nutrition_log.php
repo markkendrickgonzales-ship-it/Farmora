@@ -1,5 +1,6 @@
 <?php
 
+ob_start();
 require_once __DIR__ . '/db_connect.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {

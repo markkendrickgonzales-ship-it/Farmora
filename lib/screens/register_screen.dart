@@ -15,6 +15,7 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
@@ -26,6 +27,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
+    _nameCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     _confirmCtrl.dispose();
@@ -33,10 +35,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _submit() async {
+    final fullName = _nameCtrl.text.trim();
     final email = _emailCtrl.text.trim();
     final password = _passwordCtrl.text;
     final confirm = _confirmCtrl.text;
 
+    if (fullName.isEmpty) {
+      setState(() => _errorMsg = 'Please enter your full name.');
+      return;
+    }
     if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
       setState(() => _errorMsg = 'Please enter a valid email address.');
       return;
@@ -56,7 +63,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      await AuthService.instance.register(email: email, password: password);
+      await AuthService.instance.register(
+        email: email,
+        password: password,
+        fullName: fullName,
+      );
 
       if (!mounted) return;
 
@@ -98,6 +109,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
+                  _label('Full name'),
+                  CustomTextField(
+                    placeholder: 'Juan Dela Cruz',
+                    controller: _nameCtrl,
+                  ),
+                  const SizedBox(height: 16),
                   _label('Email address'),
                   CustomTextField(
                     placeholder: 'you@farmora.com',
