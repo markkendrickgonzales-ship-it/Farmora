@@ -6,13 +6,13 @@ define('DB_USER', 'u000000000_farmora');
 define('DB_PASS', 'CHANGE_ME');
 define('DB_PORT', 3306);
 
-define('FILE_BASE_URL', 'https://yourdomain.com/api/uploads');
+define('FILE_BASE_URL', 'https://frmora.space/api/uploads');
 
 define('TOKEN_TTL_SECONDS', 60 * 60 * 24 * 30);
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
     http_response_code(204);

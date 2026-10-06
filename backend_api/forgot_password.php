@@ -6,7 +6,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     json_response(false, null, 'POST required', 405);
 }
 
-const RESET_LINK_BASE = 'https://yourdomain.com/reset-password';
+const RESET_LINK_BASE = 'https://frmora.space/reset-password';
 
 $email = strtolower(trim(request_body()['email'] ?? ''));
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {

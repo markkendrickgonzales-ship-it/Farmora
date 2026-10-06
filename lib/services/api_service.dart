@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'auth_service.dart';
 
 class ApiConfig {
-  static const String baseUrl = 'https://yourdomain.com/api';
+  static const String baseUrl = 'https://frmora.space/api';
 
   static Uri url(String endpoint, [Map<String, String>? query]) =>
       Uri.parse('$baseUrl/$endpoint').replace(
