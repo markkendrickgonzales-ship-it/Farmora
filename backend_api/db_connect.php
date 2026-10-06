@@ -1,10 +1,14 @@
 <?php
 
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'u000000000_farmora');
-define('DB_USER', 'u000000000_farmora');
-define('DB_PASS', 'CHANGE_ME');
-define('DB_PORT', 3306);
+if (is_file(__DIR__ . '/config.php')) {
+    require_once __DIR__ . '/config.php';
+} else {
+    define('DB_HOST', 'localhost');
+    define('DB_NAME', 'CHANGE_ME_DB_NAME');
+    define('DB_USER', 'CHANGE_ME_DB_USER');
+    define('DB_PASS', 'CHANGE_ME_DB_PASSWORD');
+    define('DB_PORT', 3306);
+}
 
 define('FILE_BASE_URL', 'https://frmora.space/api/uploads');
 
@@ -31,7 +35,10 @@ function db(): PDO
                 PDO::ATTR_EMULATE_PREPARES   => false,
             ]);
         } catch (PDOException $e) {
-            json_response(false, null, 'Database connection failed', 500);
+            $detail = (defined('DB_DEBUG') && DB_DEBUG && PHP_OS_FAMILY === 'Windows')
+                ? 'Database connection failed: ' . $e->getMessage()
+                : 'Database connection failed';
+            json_response(false, null, $detail, 500);
         }
     }
     return $pdo;
