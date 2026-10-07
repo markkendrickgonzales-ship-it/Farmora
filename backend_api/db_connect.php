@@ -10,9 +10,9 @@ if (is_file(__DIR__ . '/config.php')) {
     require_once __DIR__ . '/config.php';
 } else {
     define('DB_HOST', 'localhost');
-    define('DB_NAME', 'CHANGE_ME_DB_NAME');
-    define('DB_USER', 'CHANGE_ME_DB_USER');
-    define('DB_PASS', 'CHANGE_ME_DB_PASSWORD');
+   define('DB_NAME', 'u900587911_Farmora');
+define('DB_USER', 'u900587911_farmora');
+define('DB_PASS', 'Farmora123');
     define('DB_PORT', 3306);
 }
 

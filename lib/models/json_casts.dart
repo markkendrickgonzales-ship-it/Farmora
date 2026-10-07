@@ -8,8 +8,12 @@ num? asNum(dynamic v) {
 
 int asInt(dynamic v, {int fallback = 0}) => asNum(v)?.toInt() ?? fallback;
 
+int? asIntOrNull(dynamic v) => asNum(v)?.toInt();
+
 double asDouble(dynamic v, {double fallback = 0}) =>
     asNum(v)?.toDouble() ?? fallback;
+
+double? asDoubleOrNull(dynamic v) => asNum(v)?.toDouble();
 
 String asStr(dynamic v, {String fallback = ''}) => v?.toString() ?? fallback;
 

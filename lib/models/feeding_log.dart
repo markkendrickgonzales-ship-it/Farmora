@@ -3,6 +3,7 @@ import 'json_casts.dart';
 class FeedingLog {
   final int id;
   final int farmId;
+  final int? userId;
   final String actionType;
   final double amount;
   final String unit;
@@ -15,6 +16,7 @@ class FeedingLog {
   const FeedingLog({
     required this.id,
     required this.farmId,
+    this.userId,
     required this.actionType,
     required this.amount,
     required this.unit,
@@ -27,6 +29,7 @@ class FeedingLog {
   factory FeedingLog.fromJson(Map<String, dynamic> json) => FeedingLog(
         id: asInt(json['id']),
         farmId: asInt(json['farm_id']),
+        userId: asIntOrNull(json['user_id']),
         actionType: asStr(json['action_type'], fallback: 'Feeding'),
         amount: asDouble(json['amount']),
         unit: asStr(json['unit'], fallback: 'kg'),
@@ -39,6 +42,7 @@ class FeedingLog {
   Map<String, dynamic> toJson() => {
         'id': id,
         'farm_id': farmId,
+        if (userId != null) 'user_id': userId,
         'action_type': actionType,
         'amount': amount,
         'unit': unit,

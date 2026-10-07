@@ -7,44 +7,61 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     json_response(false, null, 'POST required', 405);
 }
 
-$body    = request_body();
-$email   = strtolower(trim($body['email'] ?? ''));
-$pass    = (string)($body['password'] ?? '');
-$fullNom = trim((string)($body['full_name'] ?? ''));
+try {
+    $body    = request_body();
+    $email   = strtolower(trim($body['email'] ?? ''));
+    $pass    = (string)($body['password'] ?? '');
+    $fullNom = trim((string)($body['full_name'] ?? ''));
 
-if ($fullNom === '') {
-    json_response(false, null, 'Please enter your full name.', 400);
+    if ($fullNom === '') {
+        json_response(false, null, 'Please enter your full name.', 400);
+    }
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        json_response(false, null, 'Please enter a valid email address.', 400);
+    }
+    if (strlen($pass) < 6) {
+        json_response(false, null, 'Password must be at least 6 characters.', 400);
+    }
+
+    $pdo = db();
+    $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
+    $stmt->execute([$email]);
+    if ($stmt->fetch()) {
+        json_response(false, null, 'An account with this email already exists.', 409);
+    }
+
+    $hashedPass = password_hash($pass, PASSWORD_BCRYPT);
+    try {
+        $stmt = $pdo->prepare(
+            'INSERT INTO users (email, password, full_name) VALUES (?, ?, ?)'
+        );
+        $stmt->execute([$email, $hashedPass, $fullNom]);
+    } catch (PDOException $e) {
+        // Fallback if schema uses password_hash instead of password
+        if (strpos($e->getMessage(), "Unknown column 'password'") !== false) {
+            $stmt = $pdo->prepare(
+                'INSERT INTO users (email, password_hash, full_name) VALUES (?, ?, ?)'
+            );
+            $stmt->execute([$email, $hashedPass, $fullNom]);
+        } else {
+            throw $e;
+        }
+    }
+    $userId = (int)$pdo->lastInsertId();
+
+    $stmt = $pdo->prepare(
+        'INSERT INTO farms (owner_id, farm_name, location, farm_type) VALUES (?, ?, ?, ?)'
+    );
+    $stmt->execute([$userId, 'My First Farm', '', 'Poultry']);
+
+    json_response(true, [
+        'token' => issue_token($userId),
+        'user'  => [
+            'id'        => $userId,
+            'email'     => $email,
+            'full_name' => $fullNom,
+        ],
+    ], 'Account created', 201);
+} catch (Throwable $e) {
+    json_response(false, null, 'Error: ' . $e->getMessage(), 500);
 }
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    json_response(false, null, 'Please enter a valid email address.', 400);
-}
-if (strlen($pass) < 6) {
-    json_response(false, null, 'Password must be at least 6 characters.', 400);
-}
-
-$pdo = db();
-$stmt = $pdo->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
-$stmt->execute([$email]);
-if ($stmt->fetch()) {
-    json_response(false, null, 'An account with this email already exists.', 409);
-}
-
-$stmt = $pdo->prepare(
-    'INSERT INTO users (email, password_hash, full_name) VALUES (?, ?, ?)'
-);
-$stmt->execute([$email, password_hash($pass, PASSWORD_BCRYPT), $fullNom]);
-$userId = (int)$pdo->lastInsertId();
-
-$stmt = $pdo->prepare(
-    'INSERT INTO farms (owner_id, farm_name, location, farm_type) VALUES (?, ?, ?, ?)'
-);
-$stmt->execute([$userId, 'My First Farm', '', 'Poultry']);
-
-json_response(true, [
-    'token' => issue_token($userId),
-    'user'  => [
-        'id'        => $userId,
-        'email'     => $email,
-        'full_name' => $fullNom,
-    ],
-], 'Account created', 201);
