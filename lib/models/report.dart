@@ -3,18 +3,15 @@ import 'json_casts.dart';
 class Report {
   final int id;
   final int farmId;
-  final int? userId;
   final String title;
   final String category;
   final String? notes;
-
   final String? fileUrl;
   final DateTime createdAt;
 
   const Report({
     required this.id,
     required this.farmId,
-    this.userId,
     required this.title,
     required this.category,
     this.notes,
@@ -25,21 +22,21 @@ class Report {
   factory Report.fromJson(Map<String, dynamic> json) => Report(
         id: asInt(json['id']),
         farmId: asInt(json['farm_id']),
-        userId: asIntOrNull(json['user_id']),
-        title: asStr(json['title'], fallback: 'Report'),
+        title: asStr(json['report_title'] ?? json['title'], fallback: 'Report'),
         category: asStr(json['category'], fallback: 'General inspection'),
         notes: asStrOrNull(json['notes']),
-        fileUrl: asStrOrNull(json['file_url']),
+        fileUrl: asStrOrNull(json['file_path'] ?? json['file_url']),
         createdAt: asDate(json['created_at']),
       );
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'farm_id': farmId,
-        if (userId != null) 'user_id': userId,
+        'report_title': title,
         'title': title,
         'category': category,
         'notes': notes,
+        'file_path': fileUrl,
         'file_url': fileUrl,
         'created_at': createdAt.toIso8601String(),
       };

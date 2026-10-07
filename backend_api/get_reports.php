@@ -21,17 +21,19 @@ try {
     $stmt = db()->prepare(
         "SELECT id,
                 farm_id,
-                title,
+                report_title AS title,
+                report_title,
                 category,
                 notes,
-                file_url,
+                file_path AS file_url,
+                file_path,
                 DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%s') AS created_at
            FROM reports
-          WHERE (user_id = ? OR farm_id = ?) AND farm_id = ?
+          WHERE farm_id = ?
           ORDER BY created_at DESC
           LIMIT $limit"
     );
-    $stmt->execute([(int)$user['id'], $farmId, $farmId]);
+    $stmt->execute([(string)$farmId]);
 
     json_response(true, $stmt->fetchAll());
 } catch (Throwable $e) {

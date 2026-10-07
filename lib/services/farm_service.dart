@@ -161,9 +161,11 @@ class FarmService {
 
     await ApiService.instance.post('add_report.php', {
       'farm_id': farmId,
+      'report_title': title,
       'title': title,
       'category': category,
       'notes': notes.isNotEmpty ? notes : null,
+      'file_path': fileUrl,
       'file_url': fileUrl,
       'created_at': DateTime.now().toIso8601String(),
     });
